@@ -5,20 +5,21 @@
     let container;
     let scene, camera, renderer, torus;
   
+
     function init() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(container.clientWidth, container.clientHeight);
 
-  const geometry = new THREE.TorusBufferGeometry(10, 3, 16, 100);
+  const geometry = new THREE.TorusBufferGeometry(10, 2, 19, 100);
   const materials = new THREE.MeshBasicMaterial({
     vertexColors: true,
-    side: THREE.DoubleSide,
   });
 
   const colors = [];
   const numVertices = geometry.getAttribute('position').count;
+  const positions = geometry.getAttribute('position');
 
   const green1 = new THREE.Color(0x32a852);
   const green2 = new THREE.Color(0x78b568);
@@ -26,15 +27,17 @@
 
   for (let i = 0; i < numVertices; i++) {
     let color;
-    const faceIndex = Math.floor(i / 3);
+    const position = new THREE.Vector3().fromBufferAttribute(positions, i);
+    const angle = Math.atan2(position.x, position.z);
 
-    if (faceIndex % 3 === 0) {
-      color = green1;
-    } else if (faceIndex % 3 === 1) {
-      color = green2;
-    } else {
-      color = green3;
-    }
+    if (angle >= (-3 * Math.PI) / 3 && angle < (-1 * Math.PI) / 3) {
+  color = green1;
+} else if (angle >= (-1 * Math.PI) / 3 && angle < Math.PI / 3) {
+  color = green2;
+} else {
+  color = green3;
+}
+
 
     colors.push(color.r, color.g, color.b);
   }
@@ -46,6 +49,10 @@
 
   camera.position.z = 30;
 }
+
+
+
+
 
   
 

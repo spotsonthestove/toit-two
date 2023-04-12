@@ -6,8 +6,6 @@
   
 
 
-
-
 </script>
 
 <TorusComponent />
@@ -16,6 +14,7 @@
 
 
 
+<canvas id="canvas"></canvas>
 
 
 
