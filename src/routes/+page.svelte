@@ -8,6 +8,17 @@
 
 </script>
 
+<h1>Welcome to Toit</h1>
+
+
+<p>This might help. 
+
+We'll go thorugh a few ideas
+
+Mainly the Toit and how that might help timey-wimey focus.
+
+</p>
+
 <TorusComponent />
 
 <ThreeWheel />
@@ -25,5 +36,4 @@
   }
 </style>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+
