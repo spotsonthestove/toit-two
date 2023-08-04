@@ -17,6 +17,8 @@ We'll go thorugh a few ideas
 
 Mainly the Toit and how that might help timey-wimey focus.
 
+We'll also go through the three wheel and how that might help with the Toit.
+
 </p>
 
 <TorusComponent />
