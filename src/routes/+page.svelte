@@ -10,6 +10,9 @@
 
 <h1>Welcome to Toit</h1>
 
+<h1> take a bit out of a few things and get a round Toit </h1> 
+<h1>  </h1> 
+
 
 <p>This might help. 
 
@@ -21,7 +24,9 @@ We'll also go through the three wheel and how that might help with the Toit.
 
 </p>
 
+<div  id="threeWheel">  
 <TorusComponent />
+</div>
 
 <ThreeWheel />
 
@@ -33,8 +38,8 @@ We'll also go through the three wheel and how that might help with the Toit.
 
 <style>
   div {
-    height: 100%;
-    width: 100%;
+    height: 50%;
+    width: 50%;
   }
 </style>
 
