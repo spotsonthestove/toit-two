@@ -13,7 +13,7 @@
 <h1> take a bit out of a few things and get a round Toit </h1> 
 <h1>  </h1> 
 
-
+<div id="toit">   
 <p>This might help. 
 
 We'll go thorugh a few ideas
@@ -22,7 +22,7 @@ Mainly the Toit and how that might help timey-wimey focus.
 
 We'll also go through the three wheel and how that might help with the Toit.
 
-</p>
+</p>  </div>
 
 <div  id="threeWheel">  
 <TorusComponent />
