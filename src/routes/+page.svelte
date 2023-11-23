@@ -22,6 +22,18 @@ Mainly the Toit and how that might help timey-wimey focus.
 
 We'll also go through the three wheel and how that might help with the Toit.
 
+The main thing to explian is that the TOIT is an excuse or a habit to get into a frame of mind
+
+so that we use one of the parts of the toit so as to drive throught the other parts of the toit.\
+get into the unenjoy so as to get to the biut that is nice and that might just be washing one window\
+
+
+habits are part of it
+
+evry task is in the calendar
+
+and every calendar entry has at least three reminders haha
+
 </p>  </div>
 
 <div  id="threeWheel">  
