@@ -1,6 +1,6 @@
 <script>
 
-
+import TorusComponent from '$lib/TorusComponent.svelte';
 
 </script>
 
@@ -10,7 +10,9 @@
 
 
 
-
+<div  id="threeWheel">  
+    <TorusComponent />
+    </div>
 
 
 
