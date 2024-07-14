@@ -114,7 +114,7 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
     <div class="container">
         <h2>A Round Toit</h2>
         <div id="torus-container"></div>
-        <div id="torus-value">Selected value: None</div>
+        <div id="torus-value">Selected segment: None</div>
     </div>
 
     <script>
@@ -141,36 +141,45 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
         renderer.setSize(300, 300);
         document.getElementById('torus-container').appendChild(renderer.domElement);
 
-        const torusGeometry = new THREE.TorusGeometry(1, 0.3, 16, 100);
-        const torusMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
-        const torus = new THREE.Mesh(torusGeometry, torusMaterial);
-        scene.add(torus);
+        // Main (inner) torus
+        const mainTorusGeometry = new THREE.TorusGeometry(1, 0.1, 16, 100);
+        const mainTorusMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+        const mainTorus = new THREE.Mesh(mainTorusGeometry, mainTorusMaterial);
+        scene.add(mainTorus);
+
+        // Outer clickable torus
+        const clickableTorusGeometry = new THREE.TorusGeometry(1.5, 0.15, 16, 100);
+        const clickableTorusMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0xcccccc, 
+            transparent: true, 
+            opacity: 0.3 
+        });
+
+        const clickableTorus = new THREE.Mesh(clickableTorusGeometry, clickableTorusMaterial);
+        scene.add(clickableTorus);
+
+        // Create colored segments
+        const segmentGeometry = new THREE.TorusGeometry(1.5, 0.15, 16, 33); // 33 segments for 1/3 of the torus
+        const segmentMaterials = [
+            new THREE.MeshPhongMaterial({ color: 0xff0000 }), // Red
+            new THREE.MeshPhongMaterial({ color: 0x00ff00 }), // Green
+            new THREE.MeshPhongMaterial({ color: 0x0000ff })  // Blue
+        ];
+
+        const segments = [];
+        for (let i = 0; i < 3; i++) {
+            const segment = new THREE.Mesh(segmentGeometry, segmentMaterials[i]);
+            segment.rotation.z = (i * 2 * Math.PI) / 3;
+            segment.visible = false;
+            clickableTorus.add(segment);
+            segments.push(segment);
+        }
 
         const light = new THREE.PointLight(0xffffff, 1, 100);
         light.position.set(0, 0, 10);
         scene.add(light);
 
         camera.position.z = 3;
-
-        const sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0x4caf50 });
-
-        const spheres = [];
-        const spherePositions = [
-            { phi: 0, theta: 0 },
-            { phi: Math.PI * 2 / 3, theta: 0 },
-            { phi: Math.PI * 4 / 3, theta: 0 }
-        ];
-
-        const spheresGroup = new THREE.Group();
-        spherePositions.forEach((pos, index) => {
-            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-            sphere.position.setFromSphericalCoords(1.3, pos.phi, pos.theta);
-            sphere.userData = { value: index + 1 };
-            spheresGroup.add(sphere);
-            spheres.push(sphere);
-        });
-        torus.add(spheresGroup);
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
@@ -196,8 +205,8 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
                     y: event.offsetY - previousMousePosition.y
                 };
 
-                torus.rotation.y += deltaMove.x * 0.01;
-                torus.rotation.x += deltaMove.y * 0.01;
+                mainTorus.rotation.y += deltaMove.x * 0.01;
+                mainTorus.rotation.x += deltaMove.y * 0.01;
             }
 
             previousMousePosition = {
@@ -216,11 +225,15 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(spheres);
+            const intersects = raycaster.intersectObject(clickableTorus);
 
             if (intersects.length > 0) {
-                const clickedSphere = intersects[0].object;
-                torusValue.textContent = `Selected value: ${clickedSphere.userData.value}`;
+                const clickedPoint = intersects[0].point;
+                const angle = Math.atan2(clickedPoint.y, clickedPoint.x);
+                const segmentIndex = Math.floor(((angle + Math.PI) / (2 * Math.PI / 3)) % 3);
+                
+                segments[segmentIndex].visible = !segments[segmentIndex].visible;
+                torusValue.textContent = `Selected segment: ${segmentIndex + 1}`;
             }
         }
 
@@ -246,5 +259,3 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
     text-align: center;
   }
 </style>
-
-
