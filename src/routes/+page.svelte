@@ -1,5 +1,6 @@
 <script lang="ts">
 import CircleSegment from '$lib/components/toitNext1.svelte';
+import MindMap3D from '$lib/components/MindMap3D.svelte';
 </script>
 
 <h1>Toit</h1>
@@ -20,6 +21,10 @@ import CircleSegment from '$lib/components/toitNext1.svelte';
     <ul id="todo-list">
         <!-- Toit items will be added here dynamically -->
     </ul>
+</div>
+
+<div class="mindmap-container">
+    <MindMap3D />
 </div>
 
 <style>
@@ -78,5 +83,10 @@ import CircleSegment from '$lib/components/toitNext1.svelte';
         padding: 10px;
         border-radius: 5px;
         color: #fff;
+    }
+    .mindmap-container {
+        width: 100%;
+        height: 500px;
+        margin-top: 20px;
     }
 </style>
