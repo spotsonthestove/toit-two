@@ -1,6 +1,22 @@
 <script lang="ts">
-import CircleSegment from '$lib/components/toitNext1.svelte';
-import MindMap3D from '$lib/components/MindMap3D.svelte';
+  import MindMap3D from '$lib/components/MindMap3D.svelte';
+  import CircleSegment from '$lib/components/toitNext1.svelte';
+  import { onMount } from 'svelte';
+
+  let mindMapComponent: MindMap3D;
+
+  function addNode() {
+    if (mindMapComponent) {
+      const x = Math.random() * 6 - 3; // Random x between -3 and 3
+      const y = Math.random() * 6 - 3; // Random y between -3 and 3
+      const z = Math.random() * 2 - 1; // Random z between -1 and 1
+      mindMapComponent.addNode(x, y, z);
+    }
+  }
+
+  onMount(() => {
+    // Any initialization if needed
+  });
 </script>
 
 <h1>Toit</h1>
@@ -12,19 +28,13 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
     <CircleSegment />
 </div>
 
-<div class="container">
-    <h1>Toits</h1>
-    <form id="todo-form">
-        <input type="text" id="todo-input" placeholder="Add a new toit..." required>
-        <button type="submit">Add</button>
-    </form>
-    <ul id="todo-list">
-        <!-- Toit items will be added here dynamically -->
-    </ul>
-</div>
-
-<div class="mindmap-container">
-    <MindMap3D />
+<div class="grid-container">
+  <div class="mind-map">
+    <MindMap3D bind:this={mindMapComponent} />
+  </div>
+  <div class="controls">
+    <button on:click={addNode}>Add Node</button>
+  </div>
 </div>
 
 <style>
@@ -84,9 +94,49 @@ import MindMap3D from '$lib/components/MindMap3D.svelte';
         border-radius: 5px;
         color: #fff;
     }
-    .mindmap-container {
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 200px;
+        grid-template-rows: 1fr;
+        gap: 20px;
+        height: 70vh;
         width: 100%;
-        height: 500px;
-        margin-top: 20px;
+        max-width: 64rem;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .mind-map {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        height: 100%;
+    }
+    .controls {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .controls button {
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .controls button:hover {
+        background-color: #45a049;
+    }
+    @media (min-width: 480px) {
+        h1 {
+            font-size: 4rem;
+        }
     }
 </style>

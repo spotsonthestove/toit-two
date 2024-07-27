@@ -196,6 +196,19 @@
             renderer.render(scene, camera);
         }
     }
+
+    export function addNode(x, y, z) {
+        const newPosition = new THREE.Vector3(x, y, z);
+        createNode(newPosition);
+        
+        // Connect the new node to the center node (assuming nodes[0] is the center)
+        if (nodes.length > 1) {
+            createBranch(nodes[0], nodes[nodes.length - 1], "New Branch");
+        }
+        
+        // Update the scene
+        updateBranches();
+    }
 </script>
 
 <div bind:this={container}></div>
