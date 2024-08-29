@@ -1,65 +1,72 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount, onDestroy, createEventDispatcher } from 'svelte';
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
     import { DragControls } from 'three/examples/jsm/controls/DragControls';
+    import { nodes as nodesStore } from '../stores/mindMapStore';
 
     let container;
     let scene, camera, renderer, orbitControls, dragControls;
-    let nodes = [];
+    let threeNodes = []; // Renamed from 'nodes' to 'threeNodes'
     let branches = [];
     let isDragging = false;
 
+    // let mindMapId = null;
+
+    const dispatch = createEventDispatcher();
+
     onMount(() => {
+        init();
+        // loadMindMapState();
         if (container) {
-            init();
             animate();
         } else {
             console.error('Container not available');
         }
     });
 
+    // Function to load mind map state from the store
+    // function loadMindMapState() {
+    //     // ... (commented out)
+    // }
+
+    // Function to save mind map state to the store
+    // function saveMindMapState() {
+    //     // ... (commented out)
+    // }
+
+    // function generateUniqueId() {
+    //     // ... (commented out)
+    // }
+
     function init() {
         try {
-            // Create scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xcccccc);  // Light gray background
+            scene.background = new THREE.Color(0xcccccc);
 
-            // Create camera
             camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
             camera.position.z = 10;
 
-            // Create renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderer.domElement);
 
-            // Add orbit controls
             orbitControls = new OrbitControls(camera, renderer.domElement);
 
-            // Create initial nodes
-            createNode(new THREE.Vector3(0, 0, 0), true); // Center node
-            createNode(new THREE.Vector3(3, 2, 0));
-            createNode(new THREE.Vector3(-2, 3, 1));
+            // Remove the initial node creation from here
+            // We'll create nodes based on the store data
 
-            // Create branches between nodes
-            createBranch(nodes[0], nodes[1], "document");
-            createBranch(nodes[0], nodes[2], "laundry");
-
-            // Add drag controls for nodes
-            dragControls = new DragControls(nodes, camera, renderer.domElement);
+            dragControls = new DragControls(threeNodes, camera, renderer.domElement);
             dragControls.addEventListener('dragstart', onDragStart);
             dragControls.addEventListener('dragend', onDragEnd);
             dragControls.addEventListener('drag', onDrag);
 
-            // Add lighting
             const ambientLight = new THREE.AmbientLight(0x404040);
             scene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
             directionalLight.position.set(1, 1, 1);
             scene.add(directionalLight);
 
-            // Handle window resize
             const handleResize = () => {
                 camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
@@ -67,12 +74,12 @@
             };
             window.addEventListener('resize', handleResize);
 
-            // Cleanup function
             onDestroy(() => {
                 window.removeEventListener('resize', handleResize);
                 orbitControls.dispose();
                 dragControls.dispose();
                 renderer.dispose();
+                // mindMap.set(null);
             });
         } catch (error) {
             console.error('Error initializing 3D scene:', error);
@@ -85,13 +92,14 @@
         const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
         node.position.copy(position);
         scene.add(node);
-        nodes.push(node);
+        threeNodes.push(node); // Use 'threeNodes' instead of 'nodes'
+        updateNodesList();
     }
 
     function createBranch(startNode, endNode, label) {
         const branchGeometry = createOrganicBranchGeometry(startNode.position, endNode.position);
         const branchMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xff0000,  // Bright red for visibility
+            color: 0xff0000,
             transparent: true,
             opacity: 0.7
         });
@@ -103,6 +111,7 @@
         
         branches.push({ branch, startNode, endNode, textLabel });
         updateBranch(branches[branches.length - 1]);
+        // saveMindMapState();
     }
 
     function createOrganicBranchGeometry(start, end) {
@@ -151,12 +160,10 @@
         branch.geometry.dispose();
         branch.geometry = newGeometry;
 
-        // Update text label position and orientation
         const midpoint = new THREE.Vector3().lerpVectors(startNode.position, endNode.position, 0.5);
         textLabel.position.copy(midpoint);
         textLabel.lookAt(camera.position);
 
-        // Align text with branch direction
         const direction = new THREE.Vector3().subVectors(endNode.position, startNode.position).normalize();
         const up = new THREE.Vector3(0, 1, 0);
         const right = new THREE.Vector3().crossVectors(direction, up).normalize();
@@ -178,11 +185,13 @@
     function onDragEnd(event) {
         isDragging = false;
         orbitControls.enabled = true;
+        // saveMindMapState();
     }
 
     function onDrag(event) {
         if (isDragging) {
             updateBranches();
+            // saveMindMapState();
         }
     }
 
@@ -192,7 +201,7 @@
             if (!isDragging) {
                 orbitControls.update();
             }
-            updateBranches(); // Update branch and text positions every frame
+            updateBranches();
             renderer.render(scene, camera);
         }
     }
@@ -201,13 +210,35 @@
         const newPosition = new THREE.Vector3(x, y, z);
         createNode(newPosition);
         
-        // Connect the new node to the center node (assuming nodes[0] is the center)
-        if (nodes.length > 1) {
-            createBranch(nodes[0], nodes[nodes.length - 1], "New Branch");
+        if (threeNodes.length > 1) { // Use 'threeNodes' instead of 'nodes'
+            createBranch(threeNodes[0], threeNodes[threeNodes.length - 1], "New Branch");
         }
         
-        // Update the scene
         updateBranches();
+        updateNodesList();
+    }
+
+    function updateNodesList() {
+        $nodesStore = threeNodes.map((node, index) => ({
+            id: index,
+            x: node.position.x,
+            y: node.position.y,
+            z: node.position.z
+        }));
+    }
+
+    // Remove this reactive statement as we're updating the store directly now
+    // $: {
+    //     if (nodes.length > 0) {
+    //         updateNodesList();
+    //     }
+    // }
+
+    // Add this function to initialize nodes from the store
+    export function initializeNodesFromStore(storedNodes) {
+        storedNodes.forEach(node => {
+            addNode(node.x, node.y, node.z);
+        });
     }
 </script>
 

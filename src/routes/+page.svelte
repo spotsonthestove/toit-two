@@ -1,27 +1,43 @@
 <script lang="ts">
   import MindMap3D from '$lib/components/MindMap3D.svelte';
   import CircleSegment from '$lib/components/toitNext1.svelte';
+  import NodeTable from '$lib/components/nodetable.svelte';
   import { onMount } from 'svelte';
+  import { nodes } from '$lib/stores/mindMapStore';
 
   let mindMapComponent: MindMap3D;
 
-  function addNode() {
+  function handleAddNode() {
     if (mindMapComponent) {
-      const x = Math.random() * 6 - 3; // Random x between -3 and 3
-      const y = Math.random() * 6 - 3; // Random y between -3 and 3
-      const z = Math.random() * 2 - 1; // Random z between -1 and 1
+      const x = Math.random() * 6 - 3;
+      const y = Math.random() * 6 - 3;
+      const z = Math.random() * 2 - 1;
       mindMapComponent.addNode(x, y, z);
     }
   }
 
   onMount(() => {
-    // Any initialization if needed
+    if (mindMapComponent) {
+      if ($nodes.length === 0) {
+        // Initialize with default nodes if the store is empty
+        mindMapComponent.addNode(0, 0, 0);
+        mindMapComponent.addNode(3, 2, 0);
+        mindMapComponent.addNode(-2, 3, 1);
+      } else {
+        // Initialize with stored nodes
+        mindMapComponent.initializeNodesFromStore($nodes);
+      }
+    }
   });
 </script>
 
 <h1>Toit</h1>
 
 <h1>This will be something when I get a round Toit</h1>
+
+<nav>
+  <a href="/test">Go to Test Page</a>
+</nav>
   
 <div class="container">
     <h2>Toit Circle</h2>
@@ -33,7 +49,8 @@
     <MindMap3D bind:this={mindMapComponent} />
   </div>
   <div class="controls">
-    <button on:click={addNode}>Add Node</button>
+    <button on:click={handleAddNode}>Add Node</button>
+    <NodeTable nodes={$nodes} />
   </div>
 </div>
 
@@ -121,6 +138,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow-y: auto;
     }
     .controls button {
         padding: 10px;
@@ -138,5 +156,21 @@
         h1 {
             font-size: 4rem;
         }
+    }
+    nav {
+        margin-bottom: 20px;
+    }
+
+    nav a {
+        color: #fff;
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+
+    nav a:hover {
+        background-color: #45a049;
     }
 </style>
