@@ -1,0 +1,138 @@
+# MindMap3D Component Documentation
+
+## Overview
+
+The MindMap3D component is a Svelte-based 3D visualization tool that creates an interactive mind map using Three.js. It allows users to create, manipulate, and visualize nodes and connections in a three-dimensional space.
+
+## Key Concepts
+
+Before diving into the specific functions, let's cover some key Three.js concepts used in this component:
+
+1. **Scene**: A container that holds all 3D objects, lights, and cameras.
+2. **Camera**: Defines the viewpoint from which the scene is rendered.
+3. **Renderer**: Renders the 3D scene onto a 2D canvas.
+4. **Mesh**: A 3D object composed of geometry and material.
+5. **Geometry**: Defines the shape of a 3D object.
+6. **Material**: Defines the appearance of a 3D object.
+
+## Core Functions
+
+### `init()`
+
+This function initializes the 3D environment. It sets up the scene, camera, renderer, lights, and controls.
+
+Key steps:
+1. Creates a new Three.js scene and sets its background color.
+2. Sets up a perspective camera.
+3. Initializes a WebGL renderer and attaches it to the DOM.
+4. Sets up OrbitControls for camera manipulation.
+5. Initializes DragControls for node manipulation.
+6. Adds ambient and directional lights to the scene.
+7. Sets up a resize event listener to maintain proper aspect ratio.
+
+### `createNode(position, isCenter)`
+
+This function creates a new node in the 3D space.
+
+Key steps:
+1. Creates a sphere geometry (larger for center nodes).
+2. Applies a green material to the sphere.
+3. Creates a mesh from the geometry and material.
+4. Positions the mesh in 3D space.
+5. Adds the node to the scene and the `threeNodes` array.
+6. Updates the nodes list in the store.
+
+### `createBranch(startNode, endNode, label)`
+
+This function creates a connection (branch) between two nodes.
+
+Key steps:
+1. Generates an organic branch geometry using a custom function.
+2. Creates a semi-transparent red material for the branch.
+3. Creates a mesh for the branch and adds it to the scene.
+4. Creates a text label for the branch.
+5. Stores the branch information and updates its position.
+
+### `createOrganicBranchGeometry(start, end)`
+
+This function generates a curved geometry for branches, giving them an organic appearance.
+
+Key steps:
+1. Calculates a midpoint between start and end positions.
+2. Computes normal, binormal, and tangent vectors.
+3. Creates a control point for the curve.
+4. Generates a quadratic Bezier curve.
+5. Creates a tube geometry along the curve.
+
+### `createTextLabel(text)`
+
+This function creates a text label for branches.
+
+Key steps:
+1. Creates a canvas and draws text on it.
+2. Converts the canvas to a texture.
+3. Creates a plane geometry with the texture applied.
+
+### `updateBranch(branchObj)`
+
+This function updates the position and orientation of a branch and its label.
+
+Key steps:
+1. Regenerates the branch geometry based on new node positions.
+2. Updates the position of the text label.
+3. Orients the text label to face the camera.
+
+### `animate()`
+
+This function creates the animation loop for continuous rendering.
+
+Key steps:
+1. Requests the next animation frame.
+2. Updates OrbitControls if not dragging.
+3. Updates branch positions.
+4. Renders the scene.
+
+### `addNode(x, y, z)`
+
+This function adds a new node to the mind map.
+
+Key steps:
+1. Creates a new node at the specified position.
+2. If it's not the first node, creates a branch connecting it to the first node.
+3. Updates branches and the nodes list.
+
+### `initializeNodesFromStore(storedNodes)`
+
+This function initializes nodes based on data from the store.
+
+Key steps:
+1. Iterates through stored node data.
+2. Calls `addNode()` for each stored node.
+
+## Event Handlers
+
+### `onDragStart(event)`
+
+Disables OrbitControls when dragging starts.
+
+### `onDragEnd(event)`
+
+Re-enables OrbitControls when dragging ends.
+
+### `onDrag(event)`
+
+Updates branch positions during dragging.
+
+## Lifecycle Hooks
+
+The component uses Svelte's `onMount` and `onDestroy` hooks to set up and clean up the 3D environment.
+
+## Store Integration
+
+The component integrates with a Svelte store (`nodesStore`) to maintain node data. The `updateNodesList()` function updates this store with the current positions of all nodes.
+
+## Conclusion
+
+This MindMap3D component creates an interactive 3D visualization of a mind map using Three.js. It allows for the creation and manipulation of nodes and branches in a 3D space, with organic-looking connections between nodes. The component handles user interactions, updates node positions, and maintains a consistent state with a Svelte store.
+
+While this explanation covers the main functionalities, there's always room for further optimization and feature additions, such as saving/loading mind maps, customizing node appearances, or adding more interactive elements.

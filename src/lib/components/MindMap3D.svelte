@@ -25,19 +25,7 @@
         }
     });
 
-    // Function to load mind map state from the store
-    // function loadMindMapState() {
-    //     // ... (commented out)
-    // }
-
-    // Function to save mind map state to the store
-    // function saveMindMapState() {
-    //     // ... (commented out)
-    // }
-
-    // function generateUniqueId() {
-    //     // ... (commented out)
-    // }
+ 
 
     function init() {
         try {
