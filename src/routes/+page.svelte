@@ -3,7 +3,9 @@
 </script>
 
 <main>
-  <h1>Welcome to Our Mind Mapping App</h1>
+  <h1>Toit</h1>
+
+  <h2>This will be something when I get a round Toit</h2>
   <nav>
     <a href="/toit">Go to Toit</a>
     <a href="/login">Login</a>
