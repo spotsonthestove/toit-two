@@ -3,7 +3,7 @@
 </script>
 
 <main>
-  <h1>Toit</h1>
+  <h1>Toit  -what happened?</h1>
 
   <h2>This will be something when I get a round Toit</h2>
   <nav>
