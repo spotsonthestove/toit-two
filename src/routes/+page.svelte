@@ -10,6 +10,7 @@
     <a href="/toit">Go to Toit</a>
     <a href="/login">Login</a>
     <a href="/register">Register</a>
+    <a href="/test">Test</a>
   </nav>
 </main>
 
@@ -45,5 +46,24 @@
 
   a:hover {
     background-color: #45a049;
+  }
+
+  nav ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  nav ul li {
+    margin-bottom: 10px;
+  }
+
+  nav ul li a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  nav ul li a:hover {
+    text-decoration: underline;
   }
 </style>

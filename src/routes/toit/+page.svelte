@@ -1,6 +1,6 @@
 <script lang="ts">
   import MindMap3D from '$lib/components/MindMap3D.svelte';
-  import CircleSegment from '$lib/components/toitNext1.svelte';
+  //import CircleSegment from '$lib/components/toitNext1.svelte';
   import NodeTable from '$lib/components/nodetable.svelte';
   import { onMount } from 'svelte';
   import { nodes } from '$lib/stores/mindMapStore';
@@ -39,10 +39,10 @@
   <a href="/">Back to Home</a>
 </nav>
   
-<div class="container">
+<!-- <div class="container">
     <h2>Toit Circle</h2>
     <CircleSegment />
-</div>
+</div> -->
 
 <div class="grid-container">
   <div class="mind-map">
