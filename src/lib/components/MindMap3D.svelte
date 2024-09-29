@@ -4,6 +4,7 @@
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
     import { DragControls } from 'three/examples/jsm/controls/DragControls';
     import { nodes as nodesStore } from '../stores/mindMapStore';
+    import { Vector3, QuadraticBezierCurve3 } from 'three';
 
     let container;
     let scene, camera, renderer, orbitControls, dragControls;
@@ -85,7 +86,7 @@
     }
 
     function createBranch(startNode, endNode, label) {
-        const branchGeometry = createOrganicBranchGeometry(startNode.position, endNode.position);
+        const { curve, branchGeometry } = createOrganicBranchGeometry(startNode.position, endNode.position);
         const branchMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xff0000,
             transparent: true,
@@ -97,29 +98,28 @@
         const textLabel = createTextLabel(label);
         scene.add(textLabel);
         
-        branches.push({ branch, startNode, endNode, textLabel });
+        branches.push({ branch, startNode, endNode, textLabel, curve });
         updateBranch(branches[branches.length - 1]);
-        // saveMindMapState();
     }
 
     function createOrganicBranchGeometry(start, end) {
-        const midPoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
-        const normal = new THREE.Vector3().subVectors(end, start).normalize();
-        const binormal = new THREE.Vector3(0, 1, 0);
-        const tangent = new THREE.Vector3().crossVectors(normal, binormal);
+        const midPoint = new Vector3().lerpVectors(start, end, 0.5);
+        const normal = new Vector3().subVectors(end, start).normalize();
+        const binormal = new Vector3(0, 1, 0);
+        const tangent = new Vector3().crossVectors(normal, binormal);
         
-        const bulgeFactor = 1.0;
+        const bulgeFactor = 0.5;
         
         const controlPoint = midPoint.clone().addScaledVector(tangent, bulgeFactor);
 
-        const curve = new THREE.QuadraticBezierCurve3(
+        const curve = new QuadraticBezierCurve3(
             start,
             controlPoint,
             end
         );
 
-        const geometry = new THREE.TubeGeometry(curve, 64, 0.2, 8, false);
-        return geometry;
+        const geometry = new THREE.TubeGeometry(curve, 64, 0.1, 8, false);
+        return { curve, branchGeometry: geometry };
     }
 
     function createTextLabel(text) {
@@ -129,7 +129,10 @@
         canvas.height = 64;
         
         context.font = 'Bold 24px Arial';
-        context.fillStyle = 'black';
+        context.fillStyle = 'white';
+        context.strokeStyle = 'black';
+        context.lineWidth = 4;
+        context.strokeText(text, 0, 32);
         context.fillText(text, 0, 32);
         
         const texture = new THREE.CanvasTexture(canvas);
@@ -143,20 +146,28 @@
     }
 
     function updateBranch(branchObj) {
-        const { branch, startNode, endNode, textLabel } = branchObj;
-        const newGeometry = createOrganicBranchGeometry(startNode.position, endNode.position);
+        const { branch, startNode, endNode, textLabel, curve } = branchObj;
+        const { curve: newCurve, branchGeometry: newGeometry } = createOrganicBranchGeometry(startNode.position, endNode.position);
         branch.geometry.dispose();
         branch.geometry = newGeometry;
+        branchObj.curve = newCurve;
 
-        const midpoint = new THREE.Vector3().lerpVectors(startNode.position, endNode.position, 0.5);
-        textLabel.position.copy(midpoint);
-        textLabel.lookAt(camera.position);
+        // Update text position and orientation
+        const textPosition = newCurve.getPoint(0.5); // Get midpoint of the curve
+        const textOffset = new Vector3(0, 0.3, 0); // Offset above the branch
+        textLabel.position.copy(textPosition).add(textOffset);
 
-        const direction = new THREE.Vector3().subVectors(endNode.position, startNode.position).normalize();
-        const up = new THREE.Vector3(0, 1, 0);
-        const right = new THREE.Vector3().crossVectors(direction, up).normalize();
+        const tangent = newCurve.getTangent(0.5);
+        const up = new Vector3(0, 1, 0);
+        const right = new Vector3().crossVectors(tangent, up).normalize();
+
         textLabel.up.copy(right);
         textLabel.lookAt(camera.position);
+
+        // Align text with the branch direction
+        const startToEnd = new Vector3().subVectors(endNode.position, startNode.position);
+        const angle = Math.atan2(startToEnd.y, startToEnd.x);
+        textLabel.rotation.z = angle;
     }
 
     function updateBranches() {
