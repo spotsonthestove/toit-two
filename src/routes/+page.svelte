@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ToitV3 from '$lib/components/toit-v3.svelte';
+//  import ToitV3 from '$lib/components/toit-v3.svelte';
   // Add any other necessary imports here
 </script>
 
@@ -33,9 +33,9 @@
       </ul>
     </section>
 
-    <section class="toit-v3">
+    <!-- <section class="toit-v3">
       <ToitV3 />
-    </section>
+    </section> -->
 
     <section class="how-it-works">
       <h2>How It Works</h2>
