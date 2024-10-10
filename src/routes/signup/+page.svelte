@@ -6,29 +6,29 @@
   let password = '';
   let error = null;
 
-  async function handleLogin() {
+  async function handleSignup() {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
 
-      // Redirect to the home page or dashboard
-      goto('/');
+      // Redirect to a confirmation page or login page
+      goto('/login');
     } catch (e) {
       error = e.message;
     }
   }
 </script>
 
-<h1>Login</h1>
+<h1>Sign Up</h1>
 
-<form on:submit|preventDefault={handleLogin}>
+<form on:submit|preventDefault={handleSignup}>
   <input type="email" bind:value={email} placeholder="Email" required />
   <input type="password" bind:value={password} placeholder="Password" required />
-  <button type="submit">Log in</button>
+  <button type="submit">Sign Up</button>
 </form>
 
 {#if error}

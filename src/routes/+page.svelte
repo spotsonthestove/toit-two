@@ -1,6 +1,9 @@
 <script lang="ts">
-//  import ToitV3 from '$lib/components/toit-v3.svelte';
-  // Add any other necessary imports here
+  import { user } from '$lib/stores/userStore';
+
+  function handleLogout() {
+    // Implement your logout logic here
+  }
 </script>
 
 <main>
@@ -12,8 +15,13 @@
 
     <nav>
       <a href="/toit">Explore Toit</a>
-      <a href="/signup" class="cta">Sign Up</a>
-      <a href="/login">Login</a>
+      {#if $user}
+        <a href="/dashboard">Dashboard</a>
+        <button on:click={handleLogout}>Logout</button>
+      {:else}
+        <a href="/signup" class="cta">Sign Up</a>
+        <a href="/login">Login</a>
+      {/if}
       <a href="/test">Test</a>
     </nav>
 
