@@ -4,6 +4,7 @@
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
     import { DragControls } from 'three/examples/jsm/controls/DragControls';
     import { nodes as nodesStore } from '../stores/mindMapStore';
+    import { Vector3 } from 'three'; // Add this import
 
     let container;
     let scene, camera, renderer, orbitControls, dragControls;
@@ -12,45 +13,67 @@
     let isDragging = false;
 
     onMount(() => {
-        init();
-        animate();
+        try {
+            init();
+            initializeDefaultNodes();
+            animate();
+        } catch (error) {
+            console.error('Error in onMount:', error);
+        }
     });
 
     function init() {
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.z = 10;
+        try {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xcccccc); // Add background color
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        container.appendChild(renderer.domElement);
+            if (!container) {
+                throw new Error('Container element not found');
+            }
 
-        orbitControls = new OrbitControls(camera, renderer.domElement);
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 10;
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        directionalLight.position.set(1, 1, 1);
-        scene.add(directionalLight);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
 
-        // Event listeners
-        window.addEventListener('resize', onWindowResize);
+            orbitControls = new OrbitControls(camera, renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // Initialize drag controls
+            dragControls = new DragControls(nodes, camera, renderer.domElement);
+            dragControls.addEventListener('dragstart', () => { isDragging = true; orbitControls.enabled = false; });
+            dragControls.addEventListener('dragend', () => { isDragging = false; orbitControls.enabled = true; });
+            dragControls.addEventListener('drag', updateBranches);
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+
+            console.log('Three.js scene initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Three.js scene:', error);
+        }
     }
 
-    function createNode(position) {
-        const nodeGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-        const nodeMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    function createNode(position, isCenter = false) {
+        const nodeGeometry = new THREE.SphereGeometry(isCenter ? 0.75 : 0.5, 32, 32);
+        const nodeMaterial = new THREE.MeshPhongMaterial({ color: isCenter ? 0x00ff00 : 0x0000ff });
         const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
         node.position.copy(position);
         scene.add(node);
         nodes.push(node);
-        updateNodesList();
     }
 
     function createBranch(startNode, endNode, label) {
         const branchGeometry = createCurvedPlaneGeometry(startNode.position, endNode.position);
-        const branchMaterial = new THREE.MeshPhongMaterial({ 
+        const branchMaterial = new THREE.MeshBasicMaterial({ 
             color: 0xff0000,
             side: THREE.DoubleSide,
             transparent: true,
@@ -68,23 +91,40 @@
 
     function createCurvedPlaneGeometry(start, end) {
         const width = start.distanceTo(end);
-        const height = width * 0.5;
+        const height = width * 0.1;
         const segments = 20;
 
-        const geometry = new THREE.PlaneGeometry(width, height, segments, 1);
-        const midPoint = new THREE.Vector3().lerpVectors(start, end, 0.5);
-        const normal = new THREE.Vector3().subVectors(end, start).normalize();
-        const binormal = new THREE.Vector3(0, 1, 0);
-        const tangent = new THREE.Vector3().crossVectors(normal, binormal);
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array((segments + 1) * 3 * 2);
+        const indices = [];
 
         for (let i = 0; i <= segments; i++) {
             const t = i / segments;
             const pos = new THREE.Vector3().lerpVectors(start, end, t);
-            const bulge = Math.sin(t * Math.PI) * height * 0.5;
+            const bulge = Math.sin(t * Math.PI) * height;
+            const normal = new THREE.Vector3().subVectors(end, start).normalize();
+            const binormal = new THREE.Vector3(0, 1, 0);
+            const tangent = new THREE.Vector3().crossVectors(normal, binormal);
+
             pos.addScaledVector(tangent, bulge);
-            geometry.vertices[i].copy(pos);
+
+            const index = i * 6;
+            positions[index] = pos.x;
+            positions[index + 1] = pos.y;
+            positions[index + 2] = pos.z;
+            positions[index + 3] = pos.x;
+            positions[index + 4] = pos.y - height * 0.5;
+            positions[index + 5] = pos.z;
+
+            if (i < segments) {
+                const vertexIndex = i * 2;
+                indices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2);
+                indices.push(vertexIndex + 2, vertexIndex + 1, vertexIndex + 3);
+            }
         }
 
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setIndex(indices);
         geometry.computeVertexNormals();
         return geometry;
     }
@@ -92,15 +132,15 @@
     function createTextLabel(text) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 256;
-        canvas.height = 64;
+        canvas.width = 512; // Increased from 256
+        canvas.height = 128; // Increased from 64
         
-        context.font = 'Bold 24px Arial';
+        context.font = 'Bold 48px Arial'; // Increased font size
         context.fillStyle = 'white';
         context.strokeStyle = 'black';
-        context.lineWidth = 4;
-        context.strokeText(text, 0, 32);
-        context.fillText(text, 0, 32);
+        context.lineWidth = 8; // Increased line width
+        context.strokeText(text, 0, 64); // Adjusted y-position
+        context.fillText(text, 0, 64); // Adjusted y-position
         
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.MeshBasicMaterial({
@@ -108,7 +148,7 @@
             side: THREE.DoubleSide,
             transparent: true
         });
-        const geometry = new THREE.PlaneGeometry(2, 0.5);
+        const geometry = new THREE.PlaneGeometry(4, 1); // Increased from (2, 0.5)
         const textMesh = new THREE.Mesh(geometry, material);
         
         return textMesh;
@@ -160,6 +200,22 @@
         window.removeEventListener('resize', onWindowResize);
         // Dispose of Three.js objects
     });
+
+    function initializeDefaultNodes() {
+        const centerNode = new THREE.Vector3(0, 0, 0);
+        const leftNode = new THREE.Vector3(-3, 0, 0);
+        const rightNode = new THREE.Vector3(3, 0, 0);
+
+        createNode(centerNode, true);
+        createNode(leftNode);
+        createNode(rightNode);
+
+        createBranch(nodes[0], nodes[1], "Left Branch");
+        createBranch(nodes[0], nodes[2], "Right Branch");
+
+        updateBranches();
+        updateNodesList();
+    }
 
     export function addNode(x, y, z) {
         const newPosition = new THREE.Vector3(x, y, z);

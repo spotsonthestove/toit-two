@@ -9,8 +9,8 @@
 <main>
   <div class="grid-container">
     <header>
-      <h1>Toit - Organize Your Thoughts</h1>
-      <p>Streamline your ideas and boost productivity</p>
+      <h1>Toit - Mindful Productivity</h1>
+      <p>Embrace the art of getting around to it</p>
     </header>
 
     <nav>
@@ -26,39 +26,45 @@
     </nav>
 
     <section class="hero">
-      <h2>Welcome to Toit</h2>
-      <p>Your personal thought organizer and productivity booster</p>
-      <a href="/signup" class="cta-button">Get Started</a>
+      <h2>Welcome to Your Round Toit</h2>
+      <p>Where thoughtful progress meets your natural rhythm</p>
+      <a href="/signup" class="cta-button">Begin Your Journey</a>
     </section>
 
     <section class="features">
-      <h2>Key Features</h2>
+      <h2>The Toit Experience</h2>
       <ul>
-        <li>Intuitive mind mapping</li>
-        <li>Collaborative workspaces</li>
-        <li>Task management integration</li>
-        <li>Real-time synchronization</li>
+        <li>Circular task visualization</li>
+        <li>Balanced productivity approach</li>
+        <li>Mindful time management</li>
+        <li>Celebration of completion</li>
       </ul>
     </section>
 
-    <!-- <section class="toit-v3">
-      <ToitV3 />
-    </section> -->
-
     <section class="how-it-works">
-      <h2>How It Works</h2>
+      <h2>Embracing Your Toit</h2>
       <ol>
-        <li>Sign up for an account</li>
-        <li>Create your first mind map</li>
-        <li>Invite collaborators</li>
-        <li>Boost your productivity</li>
+        <li>Create your circular Toit</li>
+        <li>Add tasks, big and small</li>
+        <li>Progress at your own pace</li>
+        <li>Celebrate your Round Toit</li>
       </ol>
     </section>
 
+    <section class="philosophy">
+      <h2>The Toit Philosophy</h2>
+      <p>Toit isn't about rushing or overworking. It's about acknowledging that some tasks need time, others need focus, and all deserve their moment. With Toit, you're not just crossing off a list – you're completing a circle, one meaningful segment at a time.</p>
+   <p>Toit is a productivity system that helps you focus on the present and complete tasks in a balanced way. It's not about speed, it's about completion. In a world that constantly pushes us to do more, faster, and better, Toit emerges as a breath of fresh air in the realm of productivity tools. But Toit isn't just another app vying for your attention in the crowded space of task managers and to-do lists. Instead, it's a paradigm shift in how we approach our daily tasks and long-term goals.
+
+    Toit, at its core, is a playful nod to the phrase "get around to it" - that common refrain we use when speaking of tasks we know we should do, but haven't found the right moment for yet. But rather than treating these tasks as burdens or sources of guilt, Toit transforms them into segments of a circle - a "Round Toit". This visual metaphor is powerful: it reminds us that productivity isn't a linear race to be won, but a cyclical journey to be experienced. Each task, whether it's a quick errand or a deep work session, becomes a vital part of completing our circle.
+    
+    What sets Toit apart is its embrace of natural rhythms and the ebb and flow of human energy. Unlike traditional productivity tools that often inadvertently promote burnout through their relentless push for efficiency, Toit encourages users to progress at their own pace. It acknowledges that some tasks require time to percolate, others need intense focus, and still others might be quick wins that provide a boost of motivation. By allowing users to visualize their progress as they gradually fill in their Round Toit, the app provides a sense of accomplishment that goes beyond the fleeting satisfaction of crossing items off a list. In essence, Toit isn't just about getting things done - it's about fostering a more mindful, balanced approach to productivity that aligns with our natural cycles of energy and motivation.</p>
+    </section>
+
     <section class="testimonials">
-      <h2>What Our Users Say</h2>
-      <blockquote>"Toit has revolutionized the way I organize my thoughts!"</blockquote>
-      <cite>- Jane Doe, Product Manager</cite>
+      <h2>Voices of the Toit Community</h2>
+      <blockquote>"Toit helped me find balance in my work. It's not about speed, it's about completion."</blockquote>
+      <cite>- Alex Chen, Writer</cite>
     </section>
 
     <section class="pricing">
@@ -73,10 +79,10 @@
     </section>
 
     <section class="faq">
-      <h2>Frequently Asked Questions</h2>
+      <h2>Common Curiosities</h2>
       <details>
-        <summary>How secure is my data?</summary>
-        <p>Your data is encrypted and stored securely on our servers.</p>
+        <summary>What makes Toit different?</summary>
+        <p>Toit embraces the natural ebb and flow of productivity. It's not about constant hustle, but about mindful progress and the satisfaction of completion.</p>
       </details>
       <!-- Add more FAQ items as needed -->
     </section>

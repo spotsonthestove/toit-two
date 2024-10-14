@@ -1,22 +1,18 @@
 <script lang="ts">
-  import MindMapPlane from '$lib/components/mindMap-plane.svelte';
-  import NodeTable from '$lib/components/nodetable.svelte';
   import { onMount } from 'svelte';
   import { nodes } from '$lib/stores/mindMapStore';
+  import NodeTable from '$lib/components/nodetable.svelte';
 
-  let mindMapComponent: MindMapPlane;
+  let MindMapPlane;
+  let mindMapComponent;
 
-  function handleAddNode() {
-    if (mindMapComponent) {
-      const x = Math.random() * 6 - 3;
-      const y = Math.random() * 6 - 3;
-      const z = Math.random() * 2 - 1;
-      mindMapComponent.addNode(x, y, z);
-    }
-  }
+  onMount(async () => {
+    // Dynamically import the MindMapPlane component
+    const module = await import('$lib/components/mindMap-plane.svelte');
+    MindMapPlane = module.default;
 
-  onMount(() => {
-    if (mindMapComponent) {
+    // Initialize nodes after the component is loaded
+    if (mindMapComponent && mindMapComponent.initializeNodesFromStore) {
       if ($nodes.length === 0) {
         // Initialize with default nodes if the store is empty
         mindMapComponent.addNode(0, 0, 0);
@@ -28,6 +24,15 @@
       }
     }
   });
+
+  function handleAddNode() {
+    if (mindMapComponent && mindMapComponent.addNode) {
+      const x = Math.random() * 6 - 3;
+      const y = Math.random() * 6 - 3;
+      const z = Math.random() * 2 - 1;
+      mindMapComponent.addNode(x, y, z);
+    }
+  }
 </script>
 
 <h1>Toit</h1>
@@ -37,15 +42,12 @@
 <nav>
   <a href="/">Back to Home</a>
 </nav>
-  
-<!-- <div class="container">
-    <h2>Toit Circle</h2>
-    <CircleSegment />
-</div> -->
 
 <div class="grid-container">
   <div class="mind-map">
-    <MindMapPlane bind:this={mindMapComponent} />
+    {#if MindMapPlane}
+      <svelte:component this={MindMapPlane} bind:this={mindMapComponent} />
+    {/if}
   </div>
   <div class="controls">
     <button on:click={handleAddNode}>Add Node</button>
