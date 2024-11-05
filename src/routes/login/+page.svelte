@@ -1,40 +1,186 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
+  import { user } from '$lib/stores/userStore';
+  import { supabase } from '$lib/supabaseClient';
 
   let email = '';
   let password = '';
-  let error = null;
+  let error: string | null = null;
+  let loading = false;
 
-  async function handleLogin() {
+  $: redirectTo = $page.url.searchParams.get('redirectTo') || '/';
+
+  async function handleLogin(event: SubmitEvent) {
+    event.preventDefault();
+    error = null;
+    loading = true;
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      console.log('Login attempt with email:', email);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Redirect to the home page or dashboard
-      goto('/');
+      if (data.user) {
+        console.log('Login successful, user:', data.user);
+        $user = data.user;
+        
+        // Get and store session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Let Supabase handle the session storage
+          await supabase.auth.setSession(session);
+          
+          // Set cookies with full domain path and no httpOnly
+          const domain = window.location.hostname;
+          const cookieOptions = `path=/; domain=${domain}; max-age=3600; SameSite=Lax`;
+          
+          // Set cookies and log them
+          try {
+            document.cookie = `sb-access-token=${session.access_token}; ${cookieOptions}`;
+            document.cookie = `sb-refresh-token=${session.refresh_token}; ${cookieOptions}`;
+            
+            // Debug cookie setting
+            console.log('Setting cookies with options:', cookieOptions);
+            console.log('Current cookies:', document.cookie);
+            
+            // Verify cookies were set
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+              const [key, value] = cookie.trim().split('=');
+              acc[key] = value;
+              return acc;
+            }, {} as Record<string, string>);
+            
+            console.log('Cookie verification:', {
+              hasAccessToken: 'sb-access-token' in cookies,
+              hasRefreshToken: 'sb-refresh-token' in cookies
+            });
+            
+            // Wait to ensure cookies are set
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Make a test request to verify cookies
+            const response = await fetch('/api/test-auth', {
+              credentials: 'include'
+            });
+            
+            console.log('Auth test response:', await response.json());
+            
+          } catch (cookieError) {
+            console.error('Error setting cookies:', cookieError);
+          }
+          
+          // Redirect with cookies
+          if (redirectTo && redirectTo !== '/') {
+            window.location.href = redirectTo;
+          } else {
+            window.location.href = '/';
+          }
+        }
+      }
     } catch (e) {
-      error = e.message;
+      console.error('Login error:', e);
+      error = e instanceof Error ? e.message : 'An error occurred during login';
+    } finally {
+      loading = false;
     }
   }
 </script>
 
-<h1>Login</h1>
+<div class="login-container">
+  <h1>Login</h1>
 
-<form on:submit|preventDefault={handleLogin}>
-  <input type="email" bind:value={email} placeholder="Email" required />
-  <input type="password" bind:value={password} placeholder="Password" required />
-  <button type="submit">Log in</button>
-</form>
+  <form on:submit={handleLogin}>
+    <div class="form-group">
+      <input 
+        type="email" 
+        bind:value={email} 
+        placeholder="Email" 
+        required 
+        disabled={loading}
+      />
+    </div>
+    <div class="form-group">
+      <input 
+        type="password" 
+        bind:value={password} 
+        placeholder="Password" 
+        required 
+        disabled={loading}
+      />
+    </div>
+    <button type="submit" disabled={loading}>
+      {loading ? 'Logging in...' : 'Log in'}
+    </button>
+  </form>
 
-{#if error}
-  <p class="error">{error}</p>
-{/if}
+  {#if error}
+    <p class="error">{error}</p>
+  {/if}
+
+  <p class="signup-link">
+    Don't have an account? <a href="/signup">Sign up</a>
+  </p>
+</div>
 
 <style>
+  .login-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
 
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  button {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  .error {
+    color: #ff4444;
+    margin-top: 1rem;
+  }
+
+  .signup-link {
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  a {
+    color: #4CAF50;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
 </style>

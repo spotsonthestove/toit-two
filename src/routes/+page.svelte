@@ -1,8 +1,23 @@
 <script lang="ts">
   import { user } from '$lib/stores/userStore';
+  import { supabase } from '$lib/supabaseClient';
+  import { goto } from '$app/navigation';
 
-  function handleLogout() {
-    // Implement your logout logic here
+  // Derive authentication status from user store
+  $: isAuthenticated = !!$user;
+
+  async function handleLogout() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      $user = null; // Clear the user store
+      
+      // Force a page reload to clear all auth states
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   }
 </script>
 
@@ -15,7 +30,7 @@
 
     <nav>
       <a href="/toit">Explore Toit</a>
-      {#if $user}
+      {#if isAuthenticated}
         <a href="/dashboard">Dashboard</a>
         <button on:click={handleLogout}>Logout</button>
       {:else}
