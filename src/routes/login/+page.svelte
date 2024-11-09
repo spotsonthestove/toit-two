@@ -91,96 +91,40 @@
   }
 </script>
 
-<div class="login-container">
-  <h1>Login</h1>
+<div class="max-w-md mx-auto mt-8 p-8 glass-panel">
+  <h1 class="text-3xl font-bold text-white mb-6 text-center">Login</h1>
 
-  <form on:submit={handleLogin}>
-    <div class="form-group">
+  <form on:submit={handleLogin} class="space-y-4">
+    <div>
       <input 
         type="email" 
         bind:value={email} 
         placeholder="Email" 
         required 
         disabled={loading}
+        class="input-field"
       />
     </div>
-    <div class="form-group">
+    <div>
       <input 
         type="password" 
         bind:value={password} 
         placeholder="Password" 
         required 
         disabled={loading}
+        class="input-field"
       />
     </div>
-    <button type="submit" disabled={loading}>
+    <button type="submit" disabled={loading} class="btn-primary w-full">
       {loading ? 'Logging in...' : 'Log in'}
     </button>
   </form>
 
   {#if error}
-    <p class="error">{error}</p>
+    <p class="mt-4 text-red-400">{error}</p>
   {/if}
 
-  <p class="signup-link">
-    Don't have an account? <a href="/signup">Sign up</a>
+  <p class="mt-4 text-center text-white">
+    Don't have an account? <a href="/signup" class="text-toit-300 hover:text-toit-200">Sign up</a>
   </p>
 </div>
-
-<style>
-  .login-container {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-
-  button {
-    width: 100%;
-    padding: 0.5rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background-color: #45a049;
-  }
-
-  .error {
-    color: #ff4444;
-    margin-top: 1rem;
-  }
-
-  .signup-link {
-    text-align: center;
-    margin-top: 1rem;
-  }
-
-  a {
-    color: #4CAF50;
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-</style>

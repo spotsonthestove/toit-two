@@ -16,17 +16,29 @@
 
     const dispatch = createEventDispatcher();
 
+    let initialNodesCreated = false;
+
     onMount(() => {
         init();
-        // loadMindMapState();
         if (container) {
             animate();
+            // Create initial nodes if store is empty
+            if ($nodesStore.length === 0 && !initialNodesCreated) {
+                createInitialNodes();
+                initialNodesCreated = true;
+            }
         } else {
             console.error('Container not available');
         }
     });
 
- 
+    function createInitialNodes() {
+        // Create center node
+        addNode(0, 0, 0, true);
+        // Create two additional nodes
+        addNode(3, 2, 0);
+        addNode(-2, 3, 1);
+    }
 
     function init() {
         try {
@@ -77,12 +89,14 @@
 
     function createNode(position, isCenter = false) {
         const nodeGeometry = new THREE.SphereGeometry(isCenter ? 0.75 : 0.5, 32, 32);
-        const nodeMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        const nodeMaterial = new THREE.MeshPhongMaterial({ 
+            color: isCenter ? 0x4CAF50 : 0x00ff00 
+        });
         const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
         node.position.copy(position);
+        node.isCenter = isCenter; // Add this property to track center node
         scene.add(node);
-        threeNodes.push(node); // Use 'threeNodes' instead of 'nodes'
-        updateNodesList();
+        threeNodes.push(node);
     }
 
     function createBranch(startNode, endNode, label) {
@@ -205,12 +219,14 @@
         }
     }
 
-    export function addNode(x, y, z) {
+    export function addNode(x, y, z, isCenter = false) {
         const newPosition = new THREE.Vector3(x, y, z);
-        createNode(newPosition);
+        createNode(newPosition, isCenter);
         
-        if (threeNodes.length > 1) { // Use 'threeNodes' instead of 'nodes'
-            createBranch(threeNodes[0], threeNodes[threeNodes.length - 1], "New Branch");
+        // Only create branches if this isn't the first node
+        if (threeNodes.length > 1) {
+            const centerNode = threeNodes.find(node => node.isCenter) || threeNodes[0];
+            createBranch(centerNode, threeNodes[threeNodes.length - 1], "New Branch");
         }
         
         updateBranches();
@@ -222,21 +238,25 @@
             id: index,
             x: node.position.x,
             y: node.position.y,
-            z: node.position.z
+            z: node.position.z,
+            isCenter: node.isCenter || false
         }));
     }
 
-    // Remove this reactive statement as we're updating the store directly now
-    // $: {
-    //     if (nodes.length > 0) {
-    //         updateNodesList();
-    //     }
-    // }
-
-    // Add this function to initialize nodes from the store
+    // Update this function to include the isCenter property
     export function initializeNodesFromStore(storedNodes) {
+        // Clear existing nodes first
+        threeNodes.forEach(node => scene.remove(node));
+        threeNodes = [];
+        branches.forEach(branch => {
+            scene.remove(branch.branch);
+            scene.remove(branch.textLabel);
+        });
+        branches = [];
+
+        // Recreate nodes from store
         storedNodes.forEach(node => {
-            addNode(node.x, node.y, node.z);
+            addNode(node.x, node.y, node.z, node.isCenter);
         });
     }
 </script>

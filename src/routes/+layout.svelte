@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient';
   import { user } from '$lib/stores/userStore';
+  import "../app.css";
 
   export let data;
 

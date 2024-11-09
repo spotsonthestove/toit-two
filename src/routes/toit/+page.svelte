@@ -29,14 +29,16 @@
         $user = data.session.user;
       }
 
-      if (mindMapComponent) {
-        if ($nodes.length === 0) {
-          mindMapComponent.addNode(0, 0, 0);
-          mindMapComponent.addNode(3, 2, 0);
-          mindMapComponent.addNode(-2, 3, 1);
-        } else {
-          mindMapComponent.initializeNodesFromStore($nodes);
+      try {
+        if (mindMapComponent) {
+          if ($nodes.length === 0) {
+            mindMapComponent.createInitialNodes();
+          } else {
+            mindMapComponent.initializeNodesFromStore($nodes);
+          }
         }
+      } catch (error) {
+        console.error('Error initializing mind map:', error);
       }
     }
     
