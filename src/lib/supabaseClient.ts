@@ -75,7 +75,7 @@ export async function updateNode(id: number, x: number, y: number, z: number) {
 
 export async function createMindMapList(listName: string, listColor: string, userId: string) {
   const { data, error } = await supabase
-    .from('todolists')
+    .from('toit_list')
     .insert({
       user_id: userId,
       list_name: listName,

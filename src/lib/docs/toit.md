@@ -12,7 +12,7 @@ One of the fundamental ideas is that we are not motivated by the things we want 
 At the core ot TOIT is to split the things we want to do into items that can be done in a short amount of time and items that take longer.
 Or things that are a struggle and things that are easy.
 
-##AI
+## AI
 The reason we want to have a sprinkle of AI here is that it can help us to identify the things we want to do and to help us to get started on them. By splitting the things we want to do into items that can be done in a short amount of time and items that take longer.
 Or things that are a struggle and things that are easy.
 
