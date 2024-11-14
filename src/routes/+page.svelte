@@ -29,8 +29,11 @@
     </header>
 
     <nav class="flex justify-center gap-4">
+      <a href="/maps" class="px-4 py-2 bg-toit-500 hover:bg-toit-600 rounded-lg transition-colors">
+        Mind Maps
+      </a>
       <a href="/toit" class="px-4 py-2 bg-toit-500 hover:bg-toit-600 rounded-lg transition-colors">
-        Explore Toit
+        Toit
       </a>
       {#if isAuthenticated}
         <a href="/dashboard" class="px-4 py-2 bg-toit-500 hover:bg-toit-600 rounded-lg transition-colors">

@@ -24,9 +24,9 @@ node_id: integer (Primary Key, Identity, Auto-increment)
 mindmap_id: integer (Foreign Key -> mindmaps.mindmap_id)
 parent_node_id: integer (Foreign Key -> mindmap_nodes.node_id, Nullable)
 content: text
-x: smallint
-y: smallint
-z: smallint
+x: double precision
+y: double precision
+z: double precision
 node_type: character varying(50) -- 'task', 'concept', 'note'
 created_at: timestamp with time zone
 
@@ -103,9 +103,9 @@ CREATE TABLE public.mindmap_nodes (
     mindmap_id integer REFERENCES public.mindmaps(mindmap_id) ON DELETE CASCADE,
     parent_node_id integer REFERENCES public.mindmap_nodes(node_id) ON DELETE SET NULL,
     content text NOT NULL,
-    x smallint NOT NULL,
-    y smallint NOT NULL,
-    z smallint NOT NULL,
+    x double precision NOT NULL,
+    y double precision NOT NULL,
+    z double precision NOT NULL,
     node_type varchar(50) CHECK (node_type IN ('task', 'concept', 'note')),
     created_at timestamp with time zone DEFAULT now()
 );
