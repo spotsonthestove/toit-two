@@ -10,7 +10,7 @@
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import { supabase } from '$lib/supabaseClient';
-  import { getMindMaps, createMindMap } from '$lib/supabaseClient';
+  import { getMindMaps, createMindMap, updateMindMap } from '$lib/supabaseClient';
 
   export let data;
 
@@ -23,6 +23,7 @@
   let authChecked = false;
   let mindMaps = [];
   let selectedMindMapId: number | null = null;
+  let isCreatingNew = false;
   let newMapName = '';
   let newMapDescription = '';
 
@@ -128,12 +129,34 @@
     }
   });
 
+  function handleNewMap() {
+    isCreatingNew = true;
+    selectedMindMapId = null;
+    newMapName = '';
+    newMapDescription = '';
+    
+    if (mindMapComponent) {
+      mindMapComponent.createInitialNodes();
+    }
+  }
+
   async function handleMindMapSelect(event: Event) {
     const select = event.target as HTMLSelectElement;
-    selectedMindMapId = parseInt(select.value);
+    const value = select.value;
+    
+    if (value === 'new') {
+      handleNewMap();
+      return;
+    }
+    
+    isCreatingNew = false;
+    selectedMindMapId = parseInt(value);
     
     const selectedMap = mindMaps.find(map => map.mindmap_id === selectedMindMapId);
     if (selectedMap && mindMapComponent) {
+      newMapName = selectedMap.name;
+      newMapDescription = selectedMap.description;
+      
       const mappedNodes = selectedMap.mindmap_nodes.map(node => ({
         id: node.node_id,
         x: node.x,
@@ -149,8 +172,18 @@
 
   async function handleSaveMindMap() {
     try {
-      const result = await createMindMap(newMapName, newMapDescription, $nodes);
-      mindMaps = [...mindMaps, result];
+      if (isCreatingNew) {
+        const result = await createMindMap(newMapName, newMapDescription, $nodes);
+        mindMaps = [...mindMaps, result];
+        selectedMindMapId = result.mindmap_id;
+        isCreatingNew = false;
+      } else {
+        const result = await updateMindMap(selectedMindMapId!, newMapName, newMapDescription, $nodes);
+        mindMaps = mindMaps.map(map => 
+          map.mindmap_id === selectedMindMapId ? result : map
+        );
+      }
+      
       formSuccess = true;
       formError = '';
     } catch (error) {
@@ -189,8 +222,10 @@
         <select 
           class="input-field flex-1"
           on:change={handleMindMapSelect}
+          value={selectedMindMapId || ''}
         >
           <option value="">Select a mind map</option>
+          <option value="new">Create New Mind Map</option>
           {#each mindMaps as map}
             <option value={map.mindmap_id}>{map.name}</option>
           {/each}
@@ -219,7 +254,9 @@
             class="input-field"
           ></textarea>
         </div>
-        <button type="submit" class="btn-primary w-full">Save New Mind Map</button>
+        <button type="submit" class="btn-primary w-full">
+          {isCreatingNew ? 'Create New Mind Map' : 'Update Mind Map'}
+        </button>
       </form>
     </div>
 

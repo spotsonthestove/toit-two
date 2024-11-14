@@ -173,3 +173,48 @@ export async function createMindMap(name: string, description: string, nodes: No
     throw error;
   }
 }
+
+// Add this new function
+export async function updateMindMap(mindmapId: number, name: string, description: string, nodes: Node[]) {
+  try {
+    // Update the mindmap details
+    const { data: mindmap, error: mindmapError } = await supabase
+      .from('mindmaps')
+      .update({ name, description })
+      .eq('mindmap_id', mindmapId)
+      .select()
+      .single();
+
+    if (mindmapError) throw mindmapError;
+
+    // Delete existing nodes for this mindmap
+    const { error: deleteError } = await supabase
+      .from('mindmap_nodes')
+      .delete()
+      .eq('mindmap_id', mindmapId);
+
+    if (deleteError) throw deleteError;
+
+    // Create new nodes
+    const nodesWithMindMapId = nodes.map(node => ({
+      mindmap_id: mindmapId,
+      content: node.id.toString(),
+      x: node.x,
+      y: node.y,
+      z: node.z,
+      node_type: node.isCenter ? 'concept' : 'note'
+    }));
+
+    const { data: mindmapNodes, error: nodesError } = await supabase
+      .from('mindmap_nodes')
+      .insert(nodesWithMindMapId)
+      .select();
+
+    if (nodesError) throw nodesError;
+
+    return { ...mindmap, nodes: mindmapNodes };
+  } catch (error) {
+    console.error('Error updating mind map:', error);
+    throw error;
+  }
+}
