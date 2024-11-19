@@ -1,9 +1,21 @@
+import { fontFamily } from "tailwindcss/defaultTheme";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
-  theme: {
-    extend: {
-      colors: {
+	theme: {
+		container: {
+			center: true,
+			padding: "2rem",
+			screens: {
+				"2xl": "1400px"
+			}
+		},
+		extend: {
+			colors: {
+        border: 'hsl(var(--border))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         'toit': {
           50: '#f0fdf0',
           100: '#dcfce7',
