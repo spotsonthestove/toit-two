@@ -35,6 +35,9 @@ async function handleLogout() {
       <a href="/maps" class="text-sm font-medium hover:underline underline-offset-4">
         Mind Maps
       </a>
+      <a href="/mindmap" class="text-sm font-medium hover:underline underline-offset-4">
+        MindMap (Beta)
+      </a>
       <a href="/toit" class="text-sm font-medium hover:underline underline-offset-4">
         Toit
       </a>
@@ -61,7 +64,7 @@ async function handleLogout() {
         <div class="flex flex-col items-center space-y-4 text-center">
           <div class="space-y-2">
             <h1 class="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-              Let's get a round Toit, when we can.
+              You will get a round Toit, when you can.
             </h1>
             <p class="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
               Balance what you have to do with what you want to do. Toit helps you structure your life by connecting routine tasks with your deeper passions. 
@@ -183,7 +186,7 @@ async function handleLogout() {
           </div>
         </div>
         <div class="mx-auto max-w-3xl space-y-4 pt-12">
-          <Accordion type="single" collapsible>
+          <Accordion collapsible>
             <AccordionItem value="item-1">
               <AccordionTrigger>How does Toit help me get things done?</AccordionTrigger>
               <AccordionContent>

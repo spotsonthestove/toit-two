@@ -4,26 +4,13 @@
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
     import { DragControls } from 'three/examples/jsm/controls/DragControls';
     import { nodes as nodesStore } from '../stores/mindMapStore';
-    import { Vector3, QuadraticBezierCurve3, Scene, PerspectiveCamera, WebGLRenderer, Mesh, Material } from 'three';
+    import type { MindMapNode } from '$lib/types/mindmap';
 
-    // Add type guard at the top level
-    function isMesh(object: THREE.Object3D): object is THREE.Mesh {
-        return 'geometry' in object && 'material' in object;
-    }
-
-    function disposeMaterial(material: Material | Material[]) {
-        if (Array.isArray(material)) {
-            material.forEach(m => m.dispose());
-        } else {
-            material.dispose();
-        }
-    }
-
-    // Define types for THREE.js components
+    let animationFrameId: number;
     let container: HTMLDivElement;
-    let scene: Scene;
-    let camera: PerspectiveCamera;
-    let renderer: WebGLRenderer;
+    let scene: THREE.Scene;
+    let camera: THREE.PerspectiveCamera;
+    let renderer: THREE.WebGLRenderer;
     let orbitControls: OrbitControls;
     let dragControls: DragControls;
     let threeNodes: THREE.Mesh[] = [];
@@ -31,348 +18,471 @@
         branch: THREE.Mesh;
         startNode: THREE.Mesh;
         endNode: THREE.Mesh;
-        textLabel: THREE.Mesh;
-        curve: THREE.QuadraticBezierCurve3;
+        textMesh: THREE.Mesh;
     }> = [];
     let isDragging = false;
-
-    interface Node extends THREE.Mesh {
-        isCenter?: boolean;
-    }
-
-    interface NodeData {
-        id: number;
-        x: number;
-        y: number;
-        z: number;
-        isCenter?: boolean;
-    }
-
-    // let mindMapId = null;
+    let isInitialized = false;
 
     const dispatch = createEventDispatcher();
 
-    let initialNodesCreated = false;
+    function isMesh(object: THREE.Object3D): object is THREE.Mesh {
+        return 'geometry' in object && 'material' in object;
+    }
+
+    function disposeMaterial(material: THREE.Material | THREE.Material[]) {
+        if (Array.isArray(material)) {
+            material.forEach(m => m.dispose());
+        } else {
+            material.dispose();
+        }
+    }
 
     onMount(() => {
+        if (!isInitialized) {
         init();
-        if (container) {
-            animate();
-            // Create initial nodes if store is empty
-            if ($nodesStore.length === 0 && !initialNodesCreated) {
-                createInitialNodes();
-                initialNodesCreated = true;
-            }
-        } else {
-            console.error('Container not available');
+            isInitialized = true;
         }
     });
 
-    function createInitialNodes() {
-        // Create center node
-        addNode(0, 0, 0, true);
-        // Create two additional nodes
-        addNode(3, 2, 0);
-        addNode(-2, 3, 1);
+    onDestroy(() => {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        cleanup();
+    });
+
+    function cleanup() {
+        if (renderer) {
+            renderer.dispose();
+        }
+        if (orbitControls) {
+            orbitControls.dispose();
+        }
+        if (dragControls) {
+            dragControls.dispose();
+        }
+        // Clean up geometries and materials
+        threeNodes.forEach(node => {
+            if (isMesh(node)) {
+                node.geometry.dispose();
+                if (node.material) {
+                    disposeMaterial(node.material);
+                }
+        }
+    });
+        branches.forEach(({ branch, textMesh }) => {
+            if (isMesh(branch)) {
+                branch.geometry.dispose();
+                if (branch.material) {
+                    disposeMaterial(branch.material);
+                }
+            }
+            if (isMesh(textMesh)) {
+                textMesh.geometry.dispose();
+                if (textMesh.material) {
+                    disposeMaterial(textMesh.material);
+                }
+            }
+        });
     }
 
     function init() {
-        try {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xcccccc);
+        if (!container) return;
 
-            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        // Scene setup
+            scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xcccccc);
+
+        // Camera setup
+        const aspect = container.clientWidth / container.clientHeight;
+        camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
             camera.position.z = 10;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Renderer setup
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
             renderer.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderer.domElement);
 
+        // Controls setup
             orbitControls = new OrbitControls(camera, renderer.domElement);
+        // orbitControls.enableDamping = true;
+        // orbitControls.dampingFactor = 0.05;
             
-            // Initialize dragControls but don't set objects yet
             dragControls = new DragControls([], camera, renderer.domElement);
             setupDragControls();
 
-            const ambientLight = new THREE.AmbientLight(0x404040);
+        // Lighting setup
+        const ambientLight = new THREE.AmbientLight(0x404040);
             scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
             directionalLight.position.set(1, 1, 1);
             scene.add(directionalLight);
 
+        // Handle window resize
             const handleResize = () => {
+            if (!container || !camera || !renderer) return;
                 camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(container.clientWidth, container.clientHeight);
             };
             window.addEventListener('resize', handleResize);
 
-            onDestroy(() => {
-                window.removeEventListener('resize', handleResize);
-                orbitControls.dispose();
-                dragControls.dispose();
-                renderer.dispose();
-                // mindMap.set(null);
-            });
-        } catch (error) {
-            console.error('Error initializing 3D scene:', error);
-        }
+        // Start animation loop
+        animate();
     }
 
-    // New function to setup drag controls
     function setupDragControls() {
-        // Update the objects the drag controls are tracking
-        dragControls.dispose(); // Clean up old listeners
+        if (!dragControls || !camera || !renderer) return;
+
+        dragControls.dispose();
         dragControls = new DragControls(threeNodes, camera, renderer.domElement);
 
-        dragControls.addEventListener('hoveron', function (event) {
+        dragControls.addEventListener('hoveron', function (event: any) {
+            if (!orbitControls) return;
             orbitControls.enabled = false;
             const object = event.object;
-            if (object.material && 'emissive' in object.material) {
-                object.material.emissive.setHex(0xff0000);
+            if (isMesh(object) && object.material && 'emissive' in object.material) {
+                object.material.emissive.setHex(0x666666);
             }
         });
 
-        dragControls.addEventListener('hoveroff', function (event) {
+        dragControls.addEventListener('hoveroff', function (event: any) {
+            if (!orbitControls) return;
             orbitControls.enabled = true;
             const object = event.object;
-            if (object.material && 'emissive' in object.material) {
+            if (isMesh(object) && object.material && 'emissive' in object.material) {
                 object.material.emissive.setHex(0x000000);
             }
         });
 
-        dragControls.addEventListener('dragstart', function (event) {
+        dragControls.addEventListener('dragstart', function (event: any) {
+            if (!orbitControls) return;
             isDragging = true;
             orbitControls.enabled = false;
         });
 
-        dragControls.addEventListener('drag', function (event) {
+        dragControls.addEventListener('drag', function () {
             if (isDragging) {
                 updateBranches();
+                updateNodePositions();
             }
         });
 
-        dragControls.addEventListener('dragend', function (event) {
+        dragControls.addEventListener('dragend', function () {
+            if (!orbitControls) return;
             isDragging = false;
             orbitControls.enabled = true;
-            updateNodesList();
+            updateNodePositions();
+            updateBranches();
         });
+
+        renderer.domElement.addEventListener('click', handleClick);
     }
 
-    function createNode(position: THREE.Vector3, isCenter = false): void {
-        const nodeGeometry = new THREE.SphereGeometry(isCenter ? 0.75 : 0.5, 32, 32);
+    function handleClick(event: MouseEvent) {
+        if (isDragging || !camera || !renderer) return;
+        
+        event.preventDefault();
+        
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(threeNodes, false);
+        
+        if (intersects.length > 0) {
+            const clickedNode = intersects[0].object as THREE.Mesh;
+            const nodeData = $nodesStore.find(n => n.id === clickedNode.userData.id);
+            if (nodeData) {
+                dispatch('nodeSelect', {
+                    nodeId: nodeData.id,
+                    position: {
+                        x: clickedNode.position.x,
+                        y: clickedNode.position.y,
+                        z: clickedNode.position.z
+                    },
+                    nodeData
+                });
+            }
+        }
+    }
+
+    function createNode(position: THREE.Vector3, nodeData: MindMapNode): THREE.Mesh {
+        if (!scene) return;
+
+        const nodeGeometry = new THREE.SphereGeometry(nodeData.isCenter ? 0.75 : 0.5, 32, 32);
         const nodeMaterial = new THREE.MeshPhongMaterial({ 
-            color: isCenter ? 0x4CAF50 : 0x00ff00,
-            emissive: 0x000000 // Add emissive property
+            color: nodeData.isCenter ? 0x4CAF50 : 0x00ff00,
+            emissive: 0x000000,
+            shininess: 100
         });
-        const node = new THREE.Mesh(nodeGeometry, nodeMaterial) as Node;
+        const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
         node.position.copy(position);
-        node.isCenter = isCenter;
+        node.userData = { 
+            id: nodeData.id,
+            parentId: nodeData.parentId,
+            title: nodeData.title,
+            description: nodeData.description,
+            nodeType: nodeData.nodeType,
+            isCenter: nodeData.isCenter
+        };
         scene.add(node);
         threeNodes.push(node);
         
-        // Refresh drag controls when adding new nodes
+        if (nodeData.parentId !== null && !nodeData.isCenter) {
+            const parentNode = threeNodes.find(n => n.userData.id === nodeData.parentId);
+            if (parentNode) {
+                createBranch(parentNode, node);
+            }
+        }
+        
         setupDragControls();
+        return node;
     }
 
-    function createBranch(startNode: Node, endNode: Node, label: string): void {
-        const { curve, branchGeometry } = createOrganicBranchGeometry(startNode.position, endNode.position);
+    function createBranch(startNode: THREE.Mesh, endNode: THREE.Mesh) {
+        if (!scene || !camera) return;
+
+        const points = [];
+        const startPoint = startNode.position;
+        const endPoint = endNode.position;
+        const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+        midPoint.y += 0.5; // Add a slight upward curve
+
+        for (let i = 0; i <= 20; i++) {
+            const t = i / 20;
+            const point = new THREE.Vector3();
+            point.x = startPoint.x * (1 - t) * (1 - t) + midPoint.x * 2 * (1 - t) * t + endPoint.x * t * t;
+            point.y = startPoint.y * (1 - t) * (1 - t) + midPoint.y * 2 * (1 - t) * t + endPoint.y * t * t;
+            point.z = startPoint.z * (1 - t) * (1 - t) + midPoint.z * 2 * (1 - t) * t + endPoint.z * t * t;
+            points.push(point);
+        }
+
+        const branchGeometry = new THREE.TubeGeometry(
+            new THREE.CatmullRomCurve3(points),
+            20,
+            0.05,
+            8,
+            false
+        );
+
         const branchMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xff0000,
             transparent: true,
             opacity: 0.7
         });
+
         const branch = new THREE.Mesh(branchGeometry, branchMaterial);
         scene.add(branch);
         
-        const textLabel = createTextLabel(label);
-        scene.add(textLabel);
-        
-        branches.push({ branch, startNode, endNode, textLabel, curve });
-        updateBranch(branches[branches.length - 1]);
-    }
-
-    function createOrganicBranchGeometry(start: THREE.Vector3, end: THREE.Vector3) {
-        const midPoint = new Vector3().lerpVectors(start, end, 0.5);
-        const normal = new Vector3().subVectors(end, start).normalize();
-        const binormal = new Vector3(0, 1, 0);
-        const tangent = new Vector3().crossVectors(normal, binormal);
-        
-        const bulgeFactor = 0.5;
-        
-        const controlPoint = midPoint.clone().addScaledVector(tangent, bulgeFactor);
-
-        const curve = new QuadraticBezierCurve3(
-            start,
-            controlPoint,
-            end
-        );
-
-        const geometry = new THREE.TubeGeometry(curve, 64, 0.1, 8, false);
-        return { curve, branchGeometry: geometry };
-    }
-
-    function createTextLabel(text: string): THREE.Mesh {
+        // Create text for the branch with larger size
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        if (!context) return new THREE.Mesh(); // Return empty mesh if context is null
-
-        canvas.width = 256;
-        canvas.height = 64;
+        canvas.width = 512; // Increased from 256
+        canvas.height = 128; // Increased from 64
         
-        context.font = 'Bold 24px Arial';
-        context.fillStyle = 'white';
-        context.strokeStyle = 'black';
-        context.lineWidth = 4;
-        context.strokeText(text, 0, 32);
-        context.fillText(text, 0, 32);
+        if (context) {
+            context.font = '48px Arial'; // Increased from 24px
+            context.fillStyle = 'white';
+            context.textAlign = 'center';
+            // Use the end node's title for the branch text
+            context.fillText(endNode.userData.title || '', canvas.width / 2, canvas.height / 2);
+        }
         
         const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.MeshBasicMaterial({
+        const textMaterial = new THREE.MeshBasicMaterial({
             map: texture,
+            transparent: true,
             side: THREE.DoubleSide,
-            transparent: true
+            depthWrite: false // This helps prevent z-fighting
         });
-        const geometry = new THREE.PlaneGeometry(2, 0.5);
-        return new THREE.Mesh(geometry, material);
-    }
 
-    function updateBranch(branchObj: {
-        branch: THREE.Mesh;
-        startNode: Node;
-        endNode: Node;
-        textLabel: THREE.Mesh;
-        curve: THREE.QuadraticBezierCurve3;
-    }): void {
-        const { branch, startNode, endNode, textLabel, curve } = branchObj;
-        const { curve: newCurve, branchGeometry: newGeometry } = createOrganicBranchGeometry(startNode.position, endNode.position);
-        branch.geometry.dispose();
-        branch.geometry = newGeometry;
-        branchObj.curve = newCurve;
+        const textGeometry = new THREE.PlaneGeometry(2, 0.5); // Increased size
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-        // Update text position and orientation
-        const textPosition = newCurve.getPoint(0.5); // Get midpoint of the curve
-        const textOffset = new Vector3(0, 0.3, 0); // Offset above the branch
-        textLabel.position.copy(textPosition).add(textOffset);
-
-        const tangent = newCurve.getTangent(0.5);
-        const up = new Vector3(0, 1, 0);
-        const right = new Vector3().crossVectors(tangent, up).normalize();
-
-        textLabel.up.copy(right);
-        textLabel.lookAt(camera.position);
-
-        // Align text with the branch direction
-        const startToEnd = new Vector3().subVectors(endNode.position, startNode.position);
-        const angle = Math.atan2(startToEnd.y, startToEnd.x);
-        textLabel.rotation.z = angle;
+        // Position text above the branch
+        const textPosition = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+        textPosition.y += 0.5; // Increased offset
+        textMesh.position.copy(textPosition);
+        
+        // Make text always face the camera
+        scene.add(textMesh);
+        branches.push({ branch, startNode, endNode, textMesh });
     }
 
     function updateBranches() {
-        for (let branchObj of branches) {
-            updateBranch(branchObj);
-        }
+        if (!camera) return;
+
+        branches.forEach(({ branch, startNode, endNode, textMesh }) => {
+            // Update branch geometry
+            const points = [];
+            const startPoint = startNode.position;
+            const endPoint = endNode.position;
+            const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+            midPoint.y += 0.5;
+
+            for (let i = 0; i <= 20; i++) {
+                const t = i / 20;
+                const point = new THREE.Vector3();
+                point.x = startPoint.x * (1 - t) * (1 - t) + midPoint.x * 2 * (1 - t) * t + endPoint.x * t * t;
+                point.y = startPoint.y * (1 - t) * (1 - t) + midPoint.y * 2 * (1 - t) * t + endPoint.y * t * t;
+                point.z = startPoint.z * (1 - t) * (1 - t) + midPoint.z * 2 * (1 - t) * t + endPoint.z * t * t;
+                points.push(point);
+            }
+
+            const newGeometry = new THREE.TubeGeometry(
+                new THREE.CatmullRomCurve3(points),
+                20,
+                0.05,
+                8,
+                false
+            );
+
+            branch.geometry.dispose();
+            branch.geometry = newGeometry;
+
+            // Update text content and position
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 128;
+            
+            if (context) {
+                context.font = '48px Arial';
+                context.fillStyle = 'white';
+                context.textAlign = 'center';
+                // Use the end node's title for the branch text
+                context.fillText(endNode.userData.title || '', canvas.width / 2, canvas.height / 2);
+            }
+            
+            if (textMesh.material instanceof THREE.MeshBasicMaterial) {
+                const texture = new THREE.CanvasTexture(canvas);
+                textMesh.material.map = texture;
+                textMesh.material.needsUpdate = true;
+            }
+
+            const textPosition = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+            textPosition.y += 0.5;
+            textMesh.position.copy(textPosition);
+            textMesh.lookAt(camera.position);
+        });
+    }
+
+    function updateNodePositions() {
+        threeNodes.forEach(node => {
+            const storeNode = $nodesStore.find(n => n.id === node.userData.id);
+            if (storeNode) {
+                storeNode.x = node.position.x;
+                storeNode.y = node.position.y;
+                storeNode.z = node.position.z;
+                }
+            });
+        nodesStore.set($nodesStore);
     }
 
     function animate() {
-        if (renderer && scene && camera) {
-            requestAnimationFrame(animate);
-            if (!isDragging) {
-                orbitControls.update();
+        if (!scene || !camera || !renderer || !orbitControls) return;
+        
+        animationFrameId = requestAnimationFrame(animate);
+        orbitControls.update();
+        
+        // Update text orientations to face camera
+        branches.forEach(({ textMesh }) => {
+            if (textMesh) {
+                textMesh.lookAt(camera.position);
             }
-            updateBranches();
-            renderer.render(scene, camera);
-        }
-    }
-
-    export function addNode(x: number, y: number, z: number, isCenter = false): void {
-        const newPosition = new THREE.Vector3(x, y, z);
-        createNode(newPosition, isCenter);
-        
-        // Only create branches if this isn't the first node
-        if (threeNodes.length > 1) {
-            const centerNode = threeNodes.find(node => (node as Node).isCenter) || threeNodes[0];
-            createBranch(centerNode as Node, threeNodes[threeNodes.length - 1] as Node, "New Branch");
-        }
-        
-        updateBranches();
-        updateNodesList();
-    }
-
-    function updateNodesList() {
-        $nodesStore = threeNodes.map((node, index) => {
-            const meshNode = node as Node;
-            return {
-                id: index,
-                x: node.position.x,
-                y: node.position.y,
-                z: node.position.z,
-                isCenter: meshNode.isCenter || false
-            };
-        });
-    }
-
-    // Update this function to include the isCenter property
-    export function initializeNodesFromStore(nodeData: NodeData[]): void {
-        clearExistingNodes();
-        
-        nodeData.forEach(node => {
-            const position = new THREE.Vector3(node.x, node.y, node.z);
-            createNode(position, node.isCenter);
         });
         
-        // Recreate connections between nodes
-        if (threeNodes.length > 1) {
-            const centerNode = threeNodes.find(node => (node as Node).isCenter) || threeNodes[0];
-            threeNodes.forEach((node, index) => {
-                if (index > 0 && node !== centerNode) {
-                    createBranch(centerNode as Node, node as Node, "Branch " + index);
-                }
-            });
-        }
-        
-        // Refresh drag controls after initializing all nodes
-        setupDragControls();
-        
-        if (renderer && scene && camera) {
-            renderer.render(scene, camera);
-        }
+        renderer.render(scene, camera);
     }
 
-    function clearExistingNodes() {
-        if (scene) {
-            // Remove all nodes and branches
-            [...threeNodes].forEach(node => {
+    export function initializeNodesFromStore(nodes: MindMapNode[]) {
+        if (!scene) return;
+
+        // Clear existing nodes and branches
+        threeNodes.forEach(node => {
                 scene.remove(node);
                 if (isMesh(node)) {
-                    if (node.geometry) node.geometry.dispose();
+                node.geometry.dispose();
                     if (node.material) {
                         disposeMaterial(node.material);
                     }
                 }
             });
             
-            // Clear branches
-            branches.forEach(({ branch, textLabel }) => {
+        branches.forEach(({ branch, textMesh }) => {
                 scene.remove(branch);
-                scene.remove(textLabel);
+            scene.remove(textMesh);
                 if (isMesh(branch)) {
-                    if (branch.geometry) branch.geometry.dispose();
+                branch.geometry.dispose();
                     if (branch.material) {
                         disposeMaterial(branch.material);
                     }
                 }
-                if (isMesh(textLabel)) {
-                    if (textLabel.geometry) textLabel.geometry.dispose();
-                    if (textLabel.material) {
-                        disposeMaterial(textLabel.material);
+            if (isMesh(textMesh)) {
+                textMesh.geometry.dispose();
+                if (textMesh.material) {
+                    disposeMaterial(textMesh.material);
                     }
                 }
             });
 
-            // Reset arrays
             threeNodes = [];
             branches = [];
+
+        // Create new nodes
+        nodes.forEach(nodeData => {
+            const position = new THREE.Vector3(nodeData.x, nodeData.y, nodeData.z);
+            createNode(position, nodeData);
+        });
+
+        setupDragControls();
+    }
+
+    export function addNodeToScene(nodeData: MindMapNode) {
+        if (!scene) return;
+        const position = new THREE.Vector3(nodeData.x, nodeData.y, nodeData.z);
+        createNode(position, nodeData);
+    }
+
+    export function updateNode(nodeData: MindMapNode) {
+        if (!scene) return;
+        const node = threeNodes.find(n => n.userData.id === nodeData.id);
+        if (node) {
+            node.userData = {
+                ...node.userData,
+                title: nodeData.title,
+                description: nodeData.description
+            };
+            
+            // Update branch text if this node has a parent
+            const branch = branches.find(b => b.endNode === node);
+            if (branch) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 256;
+                canvas.height = 64;
+
+                if (context) {
+                    context.font = '24px Arial';
+                    context.fillStyle = 'white';
+                    context.textAlign = 'center';
+                    context.fillText(nodeData.title || '', canvas.width / 2, canvas.height / 2);
+                }
+
+                const texture = new THREE.CanvasTexture(canvas);
+                if (branch.textMesh.material instanceof THREE.MeshBasicMaterial) {
+                    branch.textMesh.material.map = texture;
+                    branch.textMesh.material.needsUpdate = true;
+                }
+            }
         }
     }
 </script>
@@ -383,5 +493,6 @@
     div {
         width: 100%;
         height: 100vh;
+        background: rgba(204, 204, 204, 0.5);
     }
 </style>

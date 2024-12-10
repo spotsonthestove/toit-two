@@ -22,3 +22,51 @@ It can help to pick up splitting up the things we want to do into items that can
 Or things that are a struggle and things that are easy.
 And that there needs to be a nature to the UI that changes depending on the context. or the mood.
 So that sometimes a basic list is all we need, and sometimes we need a mind map.
+
+## Node Data Management
+The mind map nodes need to capture more detailed information beyond their spatial relationships. Each node should:
+
+### Data Structure
+- Maintain its spatial position (x, y, z coordinates)
+- Store content/title
+- Store detailed description
+- Track node type (task, concept, note)
+- Reference parent node (if applicable)
+- Track creation timestamp
+
+### User Interface Requirements
+1. Modal Form Interface
+   - Glassmorphic design consistent with app theme
+   - Opens when:
+     - Creating new node
+     - Double-clicking existing node
+     - Using dedicated edit button
+   - Positioned relative to node location
+
+2. Form Fields
+   - Title/Content (required)
+   - Description (optional)
+   - Node Type selector
+   - Parent Node selector (if applicable)
+   - Position coordinates (read-only display)
+
+3. Interaction Flow
+   - Modal appears above mind map but doesn't block view
+   - Form should be accessible via keyboard navigation
+   - Changes should update both visual representation and database
+   - Real-time validation with helpful feedback
+   - Smooth transitions for opening/closing
+
+4. Technical Integration
+   - Separate component from MindMap3D
+   - Shares state via Svelte stores
+   - Updates Supabase database
+   - Maintains consistency between visual and data representations
+   - Handles concurrent edits gracefully
+
+5. Accessibility Considerations
+   - Keyboard navigation support
+   - ARIA labels and roles
+   - Focus management
+   - High contrast mode support
+   - Screen reader friendly

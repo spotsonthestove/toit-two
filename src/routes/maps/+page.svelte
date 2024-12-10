@@ -11,6 +11,48 @@
   import { page } from '$app/stores';
   import { supabase } from '$lib/supabaseClient';
   import { getMindMaps, createMindMap, updateMindMap } from '$lib/supabaseClient';
+  import NodeDataForm from '$lib/components/NodeDataForm.svelte';
+  import * as THREE from 'three';
+  import type { MindMapNode, NodeType } from '$lib/types/mindmap';
+
+  interface Node {
+    id: number;
+    title: string;
+    description: string;
+    x: number;
+    y: number;
+    z: number;
+    nodeType: NodeType;
+    parentId: number | null;
+    isCenter: boolean;
+  }
+
+  interface DBMindMapNode {
+    node_id: number;
+    title: string;
+    description: string;
+    content: string;
+    x: number;
+    y: number;
+    z: number;
+    node_type: NodeType;
+    parent_node_id: number | null;
+  }
+
+  interface DBMindMap {
+    mindmap_id: number;
+    name: string;
+    description: string;
+    created_at: string;
+    mindmap_nodes: DBMindMapNode[];
+  }
+
+  interface MindMap {
+    mindmap_id: number;
+    name: string;
+    description: string;
+    mindmap_nodes: DBMindMapNode[];
+  }
 
   export let data;
 
@@ -21,17 +63,16 @@
   let isInitializing = true;
   let hasInitialized = false;
   let authChecked = false;
-  let mindMaps = [];
+  let mindMaps: MindMap[] = [];
   let selectedMindMapId: number | null = null;
   let isCreatingNew = false;
   let newMapName = '';
   let newMapDescription = '';
+  let selectedNodeId: number | null = null;
+  let selectedNodePosition: { x: number; y: number; z: number } | null = null;
 
   $: isAuthenticated = browser && (data.session?.user || $user);
   $: pageError = $page.error;
-  $: if (mindMapComponent && $nodes.length > 0 && !isInitializing) {
-    mindMapComponent.initializeNodesFromStore($nodes);
-  }
 
   async function checkAuth() {
     if (browser) {
@@ -66,77 +107,161 @@
       const isAuthed = await checkAuth();
       if (!isAuthed) return;
 
-      await tick();
-      
       try {
-        if (mindMapComponent && !hasInitialized) {
-          console.log('Initializing mind map component');
-          if ($nodes.length === 0) {
-            mindMapComponent.createInitialNodes();
-          } else {
-            mindMapComponent.initializeNodesFromStore($nodes);
-          }
-          hasInitialized = true;
-        }
-      } catch (error) {
-        console.error('Error initializing mind map:', error);
-      } finally {
-        isInitializing = false;
-      }
-    }
-  });
-
-  const handleSubmit = () => {
-    return async ({ result, update }: { result: ActionResult, update: () => Promise<void> }) => {
-      await update();
-      
-      if (result.type === 'failure') {
-        formError = result.data?.message || 'Failed to save mind map';
-        formSuccess = false;
-        
-        if (result.status === 401) {
-          goto('/login?redirectTo=/maps');
-        }
-        
-        console.error('Form submission error:', result.data);
-      } else {
-        formError = '';
-        formSuccess = true;
-        console.log('Form submission successful:', result);
-      }
-    };
-  };
-
-  function handleAddNode() {
-    if (mindMapComponent) {
-      const x = Math.random() * 6 - 3;
-      const y = Math.random() * 6 - 3;
-      const z = Math.random() * 2 - 1;
-      mindMapComponent.addNode(x, y, z);
-    }
-  }
-
-  onMount(async () => {
-    if (browser) {
-      const isAuthed = await checkAuth();
-      if (!isAuthed) return;
-
-      try {
-        mindMaps = await getMindMaps();
+        const rawMindMaps = await getMindMaps();
+        mindMaps = rawMindMaps.map(map => ({
+          mindmap_id: map.mindmap_id,
+          name: map.name,
+          description: map.description,
+          mindmap_nodes: map.mindmap_nodes.map(node => ({
+            node_id: node.node_id,
+            title: node.content || 'New Node',
+            description: '',
+            content: node.content || '',
+            x: node.x,
+            y: node.y,
+            z: node.z,
+            node_type: node.node_type as NodeType,
+            parent_node_id: node.parent_node_id
+          }))
+        }));
       } catch (error) {
         console.error('Error loading mind maps:', error);
       }
     }
   });
 
-  function handleNewMap() {
+  async function handleNewMap() {
     isCreatingNew = true;
     selectedMindMapId = null;
     newMapName = '';
     newMapDescription = '';
     
+    nodes.set([]);
+    
     if (mindMapComponent) {
-      mindMapComponent.createInitialNodes();
+        await tick();
+        mindMapComponent.clearScene();
+    }
+  }
+
+  async function handleSaveMindMap() {
+    try {
+        if (!newMapName) {
+            formError = 'Please enter a map name';
+            return;
+        }
+
+        if (isCreatingNew) {
+            const initialNodes: MindMapNode[] = [
+                {
+                    id: 1,
+                    label: 'Central Idea',
+                    title: 'Central Idea',
+                    description: 'Click to edit',
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    type: 'center',
+                    nodeType: 'concept',
+                    parentId: null,
+                    color: '#4CAF50',
+                    isCenter: true
+                }
+            ];
+
+            const result = await createMindMap(
+                newMapName,
+                newMapDescription || 'Description',
+                initialNodes
+            );
+
+            mindMaps = [...mindMaps, {
+                mindmap_id: result.mindmap_id,
+                name: result.name,
+                description: result.description,
+                mindmap_nodes: result.nodes
+            }];
+            
+            selectedMindMapId = result.mindmap_id;
+            isCreatingNew = false;
+
+            const mappedNodes = result.nodes.map(node => ({
+                id: node.node_id,
+                label: node.title,
+                title: node.title,
+                description: node.description,
+                x: node.x,
+                y: node.y,
+                z: node.z,
+                type: node.node_type === 'concept' ? 'center' : 'main',
+                nodeType: node.node_type,
+                parentId: node.parent_node_id,
+                color: node.node_type === 'concept' ? '#4CAF50' : '#2196F3',
+                isCenter: node.node_type === 'concept'
+            }));
+
+            nodes.set(mappedNodes);
+            
+            if (mindMapComponent) {
+                await tick();
+                mindMapComponent.initializeNodesFromStore(mappedNodes);
+            }
+        } else {
+            const formattedNodes = $nodes.map(node => ({
+                id: node.id,
+                title: node.title,
+                description: node.description,
+                x: node.x,
+                y: node.y,
+                z: node.z,
+                nodeType: node.nodeType,
+                parentId: node.parentId,
+                isCenter: node.isCenter
+            }));
+
+            const result = await updateMindMap(
+                selectedMindMapId!,
+                newMapName,
+                newMapDescription,
+                formattedNodes
+            );
+            
+            mindMaps = mindMaps.map(map => 
+                map.mindmap_id === selectedMindMapId ? result : map
+            );
+        }
+
+        formSuccess = true;
+        setTimeout(() => formSuccess = false, 3000);
+    } catch (error) {
+        console.error('Error saving mind map:', error);
+        formError = 'Failed to save mind map';
+        setTimeout(() => formError = '', 3000);
+    }
+  }
+
+  function handleNodeSelect(event: CustomEvent) {
+    const { nodeId, position, nodeData } = event.detail;
+    selectedNodeId = nodeId;
+    selectedNodePosition = position;
+  }
+
+  function handleFormSave(event: CustomEvent) {
+    const nodeData = event.detail;
+    if (selectedNodeId !== null && mindMapComponent) {
+        mindMapComponent.updateNode(nodeData);
+        
+        nodes.update(currentNodes => 
+            currentNodes.map(node => 
+                node.id === selectedNodeId
+                    ? { ...node, ...nodeData }
+                    : node
+            )
+        );
+        
+        selectedNodeId = null;
+        selectedNodePosition = null;
     }
   }
 
@@ -144,52 +269,143 @@
     const select = event.target as HTMLSelectElement;
     const value = select.value;
     
-    if (value === 'new') {
-      handleNewMap();
-      return;
-    }
+    if (!value) return;
     
-    isCreatingNew = false;
-    selectedMindMapId = parseInt(value);
-    
-    const selectedMap = mindMaps.find(map => map.mindmap_id === selectedMindMapId);
-    if (selectedMap && mindMapComponent) {
-      newMapName = selectedMap.name;
-      newMapDescription = selectedMap.description;
-      
-      const mappedNodes = selectedMap.mindmap_nodes.map(node => ({
-        id: node.node_id,
-        x: node.x,
-        y: node.y,
-        z: node.z,
-        isCenter: node.node_type === 'concept'
-      }));
-      
-      nodes.set(mappedNodes);
-      mindMapComponent.initializeNodesFromStore(mappedNodes);
+    try {
+        isCreatingNew = false;
+        selectedMindMapId = parseInt(value);
+        
+        const selectedMap = mindMaps.find(map => map.mindmap_id === selectedMindMapId);
+        if (selectedMap && mindMapComponent) {
+            newMapName = selectedMap.name;
+            newMapDescription = selectedMap.description;
+            
+            const mappedNodes: MindMapNode[] = selectedMap.mindmap_nodes.map(node => ({
+                id: node.node_id,
+                label: node.title,
+                title: node.title,
+                description: node.description,
+                x: node.x,
+                y: node.y,
+                z: node.z,
+                type: node.node_type === 'concept' ? 'center' : 'main',
+                nodeType: node.node_type,
+                parentId: node.parent_node_id,
+                color: node.node_type === 'concept' ? '#4CAF50' : '#2196F3',
+                isCenter: node.node_type === 'concept'
+            }));
+            
+            nodes.set(mappedNodes);
+            
+            await tick();
+            
+            mindMapComponent.initializeNodesFromStore(mappedNodes);
+        }
+    } catch (error) {
+        console.error('Error selecting mind map:', error);
+        formError = 'Failed to load selected mind map';
     }
   }
 
-  async function handleSaveMindMap() {
+  async function handleAddNode() {
+    if (!mindMapComponent || !selectedMindMapId) return;
+    
+    const centerNode = $nodes.find(node => node.isCenter);
+    if (!centerNode) return;
+    
     try {
-      if (isCreatingNew) {
-        const result = await createMindMap(newMapName, newMapDescription, $nodes);
-        mindMaps = [...mindMaps, result];
-        selectedMindMapId = result.mindmap_id;
-        isCreatingNew = false;
-      } else {
-        const result = await updateMindMap(selectedMindMapId!, newMapName, newMapDescription, $nodes);
-        mindMaps = mindMaps.map(map => 
-          map.mindmap_id === selectedMindMapId ? result : map
-        );
-      }
-      
-      formSuccess = true;
-      formError = '';
+        // First, create the node in the database
+        const { data: mindmapNodes, error } = await supabase
+            .from('mindmap_nodes')
+            .insert({
+                mindmap_id: selectedMindMapId,
+                parent_node_id: centerNode.id,
+                content: 'New Node',
+                title: 'New Node',
+                description: 'Click to edit',
+                x: Math.cos(Math.random() * Math.PI * 2) * 3,
+                y: Math.sin(Math.random() * Math.PI * 2) * 3,
+                z: 0,
+                node_type: 'note'
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        
+        // Create the node object with the database ID
+        const newNode: MindMapNode = {
+            id: mindmapNodes.node_id,
+            label: mindmapNodes.title,
+            title: mindmapNodes.title,
+            description: mindmapNodes.description,
+            x: mindmapNodes.x,
+            y: mindmapNodes.y,
+            z: mindmapNodes.z,
+            type: 'main',
+            nodeType: mindmapNodes.node_type,
+            parentId: centerNode.id,
+            color: '#2196F3',
+            isCenter: false
+        };
+        
+        nodes.update(currentNodes => [...currentNodes, newNode]);
+        mindMapComponent.addNodeToScene(newNode);
+        
+        console.log('New node created:', newNode);
     } catch (error) {
-      console.error('Error saving mind map:', error);
-      formError = 'Failed to save mind map';
-      formSuccess = false;
+        console.error('Error creating new node:', error);
+    }
+  }
+
+  async function handleAddChildNode(parentNodeId: number) {
+    if (!mindMapComponent || !selectedMindMapId) return;
+    
+    try {
+        const parentNode = $nodes.find(node => node.id === parentNodeId);
+        if (!parentNode) return;
+        
+        // First, create the node in the database
+        const { data: mindmapNodes, error } = await supabase
+            .from('mindmap_nodes')
+            .insert({
+                mindmap_id: selectedMindMapId,
+                parent_node_id: parentNode.id,
+                content: 'New Node',
+                title: 'New Node',
+                description: 'Click to edit',
+                x: Math.cos(Math.random() * Math.PI * 2) * 3,
+                y: Math.sin(Math.random() * Math.PI * 2) * 3,
+                z: 0,
+                node_type: 'note'
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        
+        // Create the node object with the database ID
+        const newNode: MindMapNode = {
+            id: mindmapNodes.node_id,
+            label: mindmapNodes.title,
+            title: mindmapNodes.title,
+            description: mindmapNodes.description,
+            x: mindmapNodes.x,
+            y: mindmapNodes.y,
+            z: mindmapNodes.z,
+            type: 'main',
+            nodeType: mindmapNodes.node_type,
+            parentId: parentNode.id,
+            color: '#2196F3',
+            isCenter: false
+        };
+        
+        nodes.update(currentNodes => [...currentNodes, newNode]);
+        mindMapComponent.addNodeToScene(newNode);
+        
+        console.log('New node created:', newNode);
+    } catch (error) {
+        console.error('Error creating new node:', error);
     }
   }
 </script>
@@ -211,63 +427,150 @@
   </div>
 {:else}
   <div class="container mx-auto px-4">
-    <h1 class="text-4xl text-white text-center mb-8">Toit Mind Map</h1>
-
-    <nav class="mb-8">
-      <a href="/" class="btn-primary">Back to Home</a>
-    </nav>
-
-    <div class="glass-panel mb-8">
-      <div class="flex gap-4 mb-4">
-        <select 
-          class="input-field flex-1"
-          on:change={handleMindMapSelect}
-          value={selectedMindMapId || ''}
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl text-white">Toit Mind Map</h1>
+      <div class="flex gap-4">
+        <button
+          on:click={handleNewMap}
+          class="btn-primary"
         >
-          <option value="">Select a mind map</option>
-          <option value="new">Create New Mind Map</option>
-          {#each mindMaps as map}
-            <option value={map.mindmap_id}>{map.name}</option>
-          {/each}
-        </select>
-      </div>
-
-      <form 
-        on:submit|preventDefault={handleSaveMindMap}
-        class="space-y-4"
-      >
-        <div>
-          <label for="map_name" class="block text-white mb-2">Mind Map Name</label>
-          <input 
-            type="text" 
-            id="map_name" 
-            bind:value={newMapName}
-            required 
-            class="input-field"
-          >
-        </div>
-        <div>
-          <label for="map_description" class="block text-white mb-2">Description</label>
-          <textarea 
-            id="map_description" 
-            bind:value={newMapDescription}
-            class="input-field"
-          ></textarea>
-        </div>
-        <button type="submit" class="btn-primary w-full">
-          {isCreatingNew ? 'Create New Mind Map' : 'Update Mind Map'}
+          Create New Map
         </button>
-      </form>
+        <a href="/" class="btn-primary">Back to Home</a>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="col-span-2">
-        <MindMap3D bind:this={mindMapComponent} />
+    <div class="grid grid-cols-4 gap-8">
+      <div class="glass-panel">
+        {#if !isCreatingNew}
+          <select
+            class="input-field w-full mb-4"
+            on:change={handleMindMapSelect}
+            value={selectedMindMapId || ''}
+          >
+            <option value="">Select a mind map</option>
+            {#each mindMaps as map}
+              <option value={map.mindmap_id}>{map.name}</option>
+            {/each}
+          </select>
+        {/if}
+
+        <form 
+          on:submit|preventDefault={handleSaveMindMap}
+          class="space-y-4"
+        >
+          <div>
+            <label for="map_name" class="block text-white mb-2">
+              {isCreatingNew ? 'New Mind Map Name' : 'Mind Map Name'}
+            </label>
+            <input
+              type="text"
+              id="map_name" 
+              bind:value={newMapName}
+              required 
+              class="input-field"
+              placeholder={isCreatingNew ? 'Enter new map name' : 'Update map name'}
+            >
+          </div>
+          <div>
+            <label for="map_description" class="block text-white mb-2">Description</label>
+            <textarea 
+              id="map_description" 
+              bind:value={newMapDescription}
+              class="input-field"
+              placeholder="Add a description (optional)"
+            ></textarea>
+          </div>
+          <button type="submit" class="btn-primary w-full">
+            {isCreatingNew ? 'Create Mind Map' : 'Save Changes'}
+          </button>
+          {#if isCreatingNew}
+            <button 
+              type="button" 
+              class="btn-secondary w-full"
+              on:click={() => {
+                isCreatingNew = false;
+                selectedMindMapId = null;
+              }}
+            >
+              Cancel
+            </button>
+          {/if}
+        </form>
       </div>
-      <div class="flex flex-col gap-4">
-        <button on:click={handleAddNode} class="btn-secondary">Add Node</button>
-        <NodeTable nodes={$nodes} />
+
+      <div class="col-span-3 grid grid-cols-3 gap-8">
+        <div class="col-span-2">
+          <MindMap3D
+            bind:this={mindMapComponent}
+            on:nodeSelect={handleNodeSelect}
+          />
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <button on:click={handleAddNode} class="btn-secondary">Add Node</button>
+          
+          {#if selectedNodeId !== null && selectedNodePosition !== null}
+            <div class="glass-panel p-4">
+              <h3 class="text-white mb-4">Edit Node</h3>
+              <NodeDataForm
+                nodeId={selectedNodeId}
+                position={selectedNodePosition}
+                nodeData={{
+                  title: $nodes.find(n => n.id === selectedNodeId)?.title || '',
+                  description: $nodes.find(n => n.id === selectedNodeId)?.description || '',
+                  nodeType: $nodes.find(n => n.id === selectedNodeId)?.nodeType || 'note',
+                  parentId: $nodes.find(n => n.id === selectedNodeId)?.parentId || null
+                }}
+                on:save={handleFormSave}
+                on:addChild={(event) => handleAddChildNode(event.detail.parentId)}
+                on:close={() => {
+                  selectedNodeId = null;
+                  selectedNodePosition = null;
+                }}
+              />
+            </div>
+          {/if}
+
+          <div class="mt-auto">
+            <NodeTable nodes={$nodes} />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 {/if}
+
+{#if formError}
+  <div class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded shadow-lg">
+    {formError}
+  </div>
+{/if}
+
+{#if formSuccess}
+  <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+    Mind map saved successfully!
+  </div>
+{/if}
+
+<style>
+  .glass-panel {
+    @apply bg-gray-800 bg-opacity-50 backdrop-blur-lg border border-gray-700 rounded-lg p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800;
+  }
+
+  :global(body) {
+    @apply bg-gray-900;
+  }
+</style>

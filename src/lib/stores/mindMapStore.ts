@@ -1,24 +1,18 @@
 import { writable } from 'svelte/store';
+import type { MindMapNode } from '$lib/types/mindmap';
 
-// Define the Node interface
-export interface Node {
-  id: number;
-  x: number;
-  y: number;
-  z: number;
-  isCenter?: boolean;
+export const nodes = writable<MindMapNode[]>([]);
+
+export const selectedNode = writable<MindMapNode | null>(null);
+
+export function clearNodes() {
+    nodes.set([]);
 }
 
-// Define the MindMap interface
-export interface MindMap {
-  id: string;
-  nodes: Node[];
-  // TODO: Add branch information when implemented
+export function initializeNodes(initialNodes: MindMapNode[]) {
+    nodes.set(initialNodes.map(node => ({
+        ...node,
+        isCenter: node.parentId === null,
+        nodeType: node.type === 'center' ? 'concept' : 'note'
+    })));
 }
-
-// Create a writable store for the mind map
-// Initially set to null, will be populated with mind map data when available
-export const mindMap = writable<MindMap | null>(null);
-
-// Export the nodes store separately if needed
-export const nodes = writable<Node[]>([]);
