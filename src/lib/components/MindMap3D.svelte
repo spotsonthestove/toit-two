@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher } from 'svelte';
     import * as THREE from 'three';
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-    import { DragControls } from 'three/examples/jsm/controls/DragControls';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
     import { nodes as nodesStore } from '../stores/mindMapStore';
     import type { MindMapNode } from '$lib/types/mindmap';
 
