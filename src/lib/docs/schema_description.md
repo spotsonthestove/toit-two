@@ -31,6 +31,11 @@ node_type: character varying(50) -- 'concept' (for center nodes) or 'note' (for 
 created_at: timestamp with time zone
 title: varchar(255)
 description: text
+status: varchar(50) CHECK (status IN ('pending', 'in_progress', 'completed'))
+priority: integer CHECK (priority BETWEEN 1 AND 5)
+estimated_duration_minutes: integer
+tags: text[]
+color: varchar(7)
 
 ### Constraints:
 - valid_parent: Ensures that:
@@ -133,6 +138,11 @@ CREATE TABLE public.mindmap_nodes (
     created_at timestamp with time zone DEFAULT now(),
     title varchar(255),
     description text,
+    status varchar(50) CHECK (status IN ('pending', 'in_progress', 'completed')),
+    priority integer CHECK (priority BETWEEN 1 AND 5),
+    estimated_duration_minutes integer,
+    tags text[],
+    color varchar(7),
     CONSTRAINT valid_parent CHECK (
         (parent_node_id IS NULL AND node_type = 'concept') OR 
         (parent_node_id IS NOT NULL AND node_type = 'note' AND node_id != parent_node_id)

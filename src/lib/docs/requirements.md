@@ -71,3 +71,39 @@ Develop the app for both web and iOS platforms.
 ## Documentation and Support
 - Maintain comprehensive documentation for developers and users.
 - Provide support channels for user feedback and issue resolution.
+
+## AI Integration and Advanced Features
+
+### AI-Powered Task Management
+- **Task Decomposition**: Leverage Cloudflare AI to automatically break down complex tasks into manageable subtasks.
+- **Semantic Analysis**: Use AI to identify relationships between tasks and suggest optimal task sequences.
+- **Document Processing**: 
+  - Extract key insights from uploaded PDFs
+  - Generate task suggestions based on document content
+  - Create mind map nodes from document structure
+
+### AI Integration Technologies
+- **AI Processing**: Cloudflare Workers AI
+- **Vector Storage Options**:
+  1. Cloudflare Vectorize
+  2. Supabase pgvector
+- **Supported AI Capabilities**:
+  - Natural language task parsing
+  - Semantic similarity detection
+  - Intelligent task prioritization
+  - Context-aware task recommendations
+
+### Advanced Task Management Features
+- **Intelligent Task Splitting**
+  - AI-assisted task decomposition
+  - Hierarchical task relationship mapping
+  - Dynamic subtask generation
+- **Contextual Task Insights**
+  - Automated tags and categorization
+  - Estimated time and complexity prediction
+  - Cross-document task correlation
+
+## Performance and Scalability Considerations
+- Implement efficient vector storage and retrieval
+- Optimize AI processing for low-latency responses
+- Ensure data privacy and security in AI interactions

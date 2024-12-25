@@ -1,16 +1,20 @@
 export interface MindMapNode {
     id: number;
     label: string;
-    title?: string;
-    description?: string;
+    title: string;
+    description: string;
     x: number;
     y: number;
     z: number;
+    type: 'center' | 'main';
+    nodeType: NodeType;
     parentId: number | null;
-    type: 'center' | 'main' | 'sub';
-    nodeType?: NodeType;
     color: string;
-    isCenter?: boolean;
+    isCenter: boolean;
+    status?: 'pending' | 'in_progress' | 'completed';
+    priority?: number;
+    estimatedDuration?: number;
+    tags?: string[];
 }
 
 export interface Branch {

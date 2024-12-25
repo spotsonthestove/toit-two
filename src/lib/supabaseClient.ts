@@ -63,14 +63,35 @@ export async function addNode(x: number, y: number, z: number) {
   return data[0];
 }
 
-export async function updateNode(id: number, x: number, y: number, z: number) {
-  const { data, error } = await supabase
-    .from('toit_mindmap_node')
-    .update({ x, y, z })
-    .eq('id', id)
-    .select();
-  if (error) throw error;
-  return data[0];
+export async function updateNode(nodeData: {
+    id: number,
+    title: string,
+    description: string,
+    nodeType: 'concept' | 'note',
+    status?: 'pending' | 'in_progress' | 'completed',
+    priority?: number,
+    estimatedDuration?: number,
+    tags?: string[],
+    color?: string
+}) {
+    const { data, error } = await supabase
+        .from('mindmap_nodes')
+        .update({
+            content: nodeData.title,
+            title: nodeData.title,
+            description: nodeData.description,
+            node_type: nodeData.nodeType,
+            status: nodeData.status,
+            priority: nodeData.priority,
+            estimated_duration_minutes: nodeData.estimatedDuration,
+            tags: nodeData.tags,
+            color: nodeData.color
+        })
+        .eq('node_id', nodeData.id)
+        .select();
+
+    if (error) throw error;
+    return data[0];
 }
 
 export async function createMindMapList(listName: string, listColor: string, userId: string) {
