@@ -1,50 +1,12 @@
 ## dev journal
 
-### 2024-03-20
+### 2025-01-06
 
-#### What was done:
-- Fixed parent-child relationship persistence in database
-- Identified next steps for TOIT implementation
+1-
+Rebuilding the app for the cloudflare workers.
+https://developers.cloudflare.com/workers/frameworks/framework-guides/svelte/
+this will enable the app to be deployed to the cloudflare workers. and use the cloudflare workers to host the app. and the AI features will be hosted on the cloudflare workers.
+It asked if wanted to install  msdvex so going to try to that
+https://mdsvex.pngwn.io/playground
 
-#### Next steps:
-1. Enhance node data structure to support TOIT concepts:
-   - Add status field (pending, in_progress, completed)
-   - Add estimated duration field
-   - Add priority field
-   - Add tags/categories
 
-2. UI Improvements:
-   - Create modal form for editing node details
-   - Add visual indicators for node status
-   - Implement node filtering by status/category
-
-3. Task Management Features:
-   - Implement task splitting functionality
-   - Add time tracking for tasks
-   - Create view for showing task hierarchy and dependencies
-
-4. Schema Updates Needed:
-   - Add new fields to mindmap_nodes table for task management
-   - Consider creating separate task-specific tables for detailed tracking
-
-5. Integration Points:
-   - Connect mind map nodes with toit_tasks table
-   - Implement real-time updates for task status changes
-   - Add task progress visualization in mind map view
-
-### 2024-03-20 (continued)
-
-#### Additional improvements made:
-- Refactored mind map update logic to preserve node identity and improve data consistency
-- Implemented more efficient node update strategy for better collaboration support
-
-#### Technical debt addressed:
-- Fixed potential data loss issue during map saves
-- Improved database operation efficiency
-- Better support for future real-time collaboration features
-
-#### Next technical steps:
-1. Add version control for node updates
-2. Implement real-time subscriptions for collaborative editing
-3. Add transaction support for related operations
-4. Implement node conflict resolution strategy
