@@ -1,12 +1,14 @@
 # Project Requirements
 
 ## Project Overview
+
 - **Purpose**: The application aims to help users organize their tasks and ideas using mind maps, integrating task management with a visual representation of concepts and notes.
 - **Target Audience**: The app is designed for individuals and teams looking to enhance productivity and organization through visual task management.
 
 ## Core Features
 
 ### Mind Map Creation
+
 The mind map feature will be developed using Three.js to create an interactive 3D environment where users can visualize and organize their tasks and ideas. The design and functionality will be inspired by the visual reference provided in `mindmap-example.png` and the existing code in `MindMap3D.svelte`. Key aspects of the mind map creation include:
 
 - **3D Visualization**: The mind map will be rendered in a 3D space, allowing users to navigate and interact with nodes using intuitive controls. This will be achieved using Three.js, a powerful library for 3D graphics in the browser.
@@ -28,61 +30,109 @@ The mind map feature will be developed using Three.js to create an interactive 3
 By leveraging Three.js and integrating with the existing Svelte components, the mind map feature will provide a rich, interactive experience for users, enhancing their ability to organize and visualize their ideas effectively.
 
 ### Task Management
+
 Integrate task tracking within mind maps, allowing users to manage tasks visually.
 
 ### User Authentication
+
 Secure user login and registration using Supabase Auth.
 
 ### Real-time Collaboration
+
 Allow multiple users to collaborate on mind maps in real-time.
 
 ### Cross-Platform Support
+
 Develop the app for both web and iOS platforms.
 
 ## Technical Stack
+
 - **Frontend**: SvelteKit with Tailwind CSS and Shadcn-Svelte for UI components.
 - **Backend**: Supabase for authentication and PostgreSQL database.
 - **Hosting**: Cloudflare for web hosting.
-- **Mobile**: Considerations for an iOS app with similar functionality.
+- **Mobile**: SwiftUI and SceneKit for iOS.
+- **API**: Cloudflare Workers-based API for both web and mobile communication.
 
-## User Interface Design
-- **Responsive Design**: Ensure the app is usable on various devices, including desktops, tablets, and smartphones.
-- **Accessibility**: Implement features like keyboard navigation, ARIA labels, and high contrast modes to make the app accessible to all users.
+## API Implementation Using Cloudflare Workers
+
+To maintain consistency and security, a Cloudflare Worker-based API will handle all communication between the frontend (web and iOS) and Supabase. This API will be embedded within the SvelteKit application and deployed as a Cloudflare Worker, offering:
+
+- **Unified Access**: A single API for both web and iOS applications.
+- **Security**: Prevents direct access to Supabase, adding extra authentication and validation layers.
+- **Performance Optimization**: Cloudflare's edge network ensures fast responses.
+- **Cloudflare AI Integration**: Exposes AI processing endpoints for advanced task management.
+
+### API Structure
+
+The API will reside under `src/routes/api/` in the SvelteKit project, handling:
+
+```
+/src/routes/api/
+    ├── auth.ts        (Handles login, signup via Supabase)
+    ├── data.ts        (Fetches data from Supabase)
+    ├── ai.ts          (Cloudflare AI endpoints)
+    ├── index.ts       (API docs or default endpoint)
+```
+
+The iOS app will interact with this API via HTTP requests instead of using the Supabase Swift SDK, ensuring centralized logic and easier maintenance.
+
+### Example API Usage in iOS
+
+```swift
+let url = URL(string: "https://your-cloudflare-worker-url/api/data")!
+var request = URLRequest(url: url)
+request.httpMethod = "GET"
+URLSession.shared.dataTask(with: request) { data, response, error in
+    // Handle response
+}.resume()
+```
 
 ## Development Stages
-- **Stage 1: Setup and Configuration**
-  - Set up the development environment with SvelteKit and Supabase.
-  - Configure Tailwind CSS and Shadcn-Svelte for UI development.
-- **Stage 2: Core Features Implementation**
-  - Develop the mind map creation and task management features.
-  - Implement user authentication and session management.
-- **Stage 3: Real-time Collaboration**
-  - Integrate real-time updates using Supabase's real-time capabilities.
-- **Stage 4: Cross-Platform Development**
-  - Adapt the web app for iOS using a framework like Capacitor or React Native.
-- **Stage 5: Testing and Deployment**
-  - Conduct thorough testing on both web and iOS platforms.
-  - Deploy the web app on Cloudflare and prepare the iOS app for App Store submission.
+
+- **Stage 1: Core Mind Map Implementation** ✓
+  - Set up the development environment with SvelteKit and Supabase
+  - Implement 3D mind map visualization and interaction
+  - Basic task management integration
+- **Stage 2: AI Integration and Enhanced Task Management**
+  - Implement AI-powered task decomposition and suggestions
+  - Integrate document processing capabilities
+  - Develop semantic analysis features
+  - Enhance task management with AI insights
+- **Stage 3: Real-time Collaboration and UI Enhancement**
+  - Enable simultaneous editing and collaboration
+  - Implement conflict resolution
+  - Optimize user interface and experience
+  - Refine accessibility features
+- **Stage 4: Cross-Platform Development and Deployment**
+  - Adapt web app for iOS compatibility
+  - Implement Cloudflare Worker-based API for mobile communication
+  - Conduct comprehensive testing
+  - Deploy to production environments
+  - Establish support and feedback channels
 
 ## Future Enhancements
+
 - **AI Integration**: Explore AI features to suggest task prioritization or mind map organization.
 - **Advanced Analytics**: Provide users with insights into their productivity and task completion trends.
 
 ## Documentation and Support
+
 - Maintain comprehensive documentation for developers and users.
 - Provide support channels for user feedback and issue resolution.
 
 ## AI Integration and Advanced Features
 
 ### AI-Powered Task Management
+
 - **Task Decomposition**: Leverage Cloudflare AI to automatically break down complex tasks into manageable subtasks.
 - **Semantic Analysis**: Use AI to identify relationships between tasks and suggest optimal task sequences.
-- **Document Processing**: 
+- **Document Processing**:
   - Extract key insights from uploaded PDFs
   - Generate task suggestions based on document content
   - Create mind map nodes from document structure
 
 ### AI Integration Technologies
+
 - **AI Processing**: Cloudflare Workers AI
 - **Vector Storage Options**:
   1. Cloudflare Vectorize
@@ -93,17 +143,3 @@ Develop the app for both web and iOS platforms.
   - Intelligent task prioritization
   - Context-aware task recommendations
 
-### Advanced Task Management Features
-- **Intelligent Task Splitting**
-  - AI-assisted task decomposition
-  - Hierarchical task relationship mapping
-  - Dynamic subtask generation
-- **Contextual Task Insights**
-  - Automated tags and categorization
-  - Estimated time and complexity prediction
-  - Cross-document task correlation
-
-## Performance and Scalability Considerations
-- Implement efficient vector storage and retrieval
-- Optimize AI processing for low-latency responses
-- Ensure data privacy and security in AI interactions

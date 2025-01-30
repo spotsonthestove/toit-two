@@ -1,5 +1,6 @@
 <script lang="ts">
   import ToitTorus from '$lib/components/ToitTorus.svelte';
+  import OrbComponent from '$lib/components/trying_stuff.svelte';
 </script>
 
 <h1>Test Page</h1>
@@ -13,6 +14,11 @@
 <h2>Toit Torus Component Test</h2>
 
 <ToitTorus />
+
+<h2>Glowing Orb Test</h2>
+<div class="orb-container">
+  <OrbComponent size="200px" primaryColor="#FF6B00" secondaryColor="#FFB800" />
+</div>
 
 <style>
   h1 {
@@ -48,5 +54,12 @@
     text-align: center;
     color: #333;
     margin-top: 2rem;
+  }
+
+  .orb-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
   }
 </style>
