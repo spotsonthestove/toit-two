@@ -37,7 +37,7 @@ export const actions: Actions = {
         return { error: 'Please enter a task' };
       }
 
-      const response = await platform.env.AI.run('@cf/meta/llama-3-8b-instruct', {
+      const response = await platform.env.AI.run('@cf/mistral/mistral-7b-instruct-v0.1', {
         messages: [
           {
             role: 'system',
@@ -49,7 +49,8 @@ export const actions: Actions = {
           }
         ],
         stream: false,
-        max_tokens: 256
+        max_tokens: 256,
+        temperature: 0.3
       });
 
       console.log('AI Response:', response);
