@@ -24,4 +24,9 @@
   });
 </script>
 
+<svelte:head>
+  <!-- Favicon: Using your logo from the static directory -->
+  <link rel="icon" href="/logo.jpg" type="image/jpeg">
+</svelte:head>
+
 <slot />

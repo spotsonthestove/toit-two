@@ -29,6 +29,7 @@ async function handleLogout() {
 <div class="flex flex-col min-h-screen">
   <header class="px-4 lg:px-6 h-14 flex items-center">
     <a class="flex items-center justify-center" href="/">
+      <img src="/logo.jpg" alt="Toit logo" class="h-10 w-auto mr-2" />
       <span class="font-bold text-2xl">toit</span>
     </a>
     <nav class="ml-auto flex gap-4 sm:gap-6">
