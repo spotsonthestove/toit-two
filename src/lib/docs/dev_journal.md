@@ -333,4 +333,124 @@ Next Steps:
 
 Note: This implementation successfully bridges the AI task splitting with our mind map visualization, creating a foundation for further enhancements.
 
+### 2024-01-11
+
+Started implementing Stage 3 MindMap3D improvements:
+
+1. **Phase 1: Text Orientation Baseline**
+   - Current status: Text orientation sometimes flips or rotates unnaturally during node movement
+   - Implementation plan:
+     1. Ensure consistent text orientation using camera-facing behavior
+     2. Add proper text scaling and visibility improvements
+     3. Implement text background for better readability
+   - Testing approach:
+     - Manual node dragging tests
+     - Camera rotation tests
+     - Text readability validation at different angles
+
+Next steps:
+1. Implement consistent text orientation
+2. Add text background and improved visibility
+3. Test with various node arrangements and camera angles
+4. Document any performance impacts
+
+Note: Will need to carefully manage text mesh updates to prevent memory leaks and ensure smooth performance.
+
+### 2024-01-11 (Update 1)
+
+Implemented first phase of MindMap3D improvements:
+
+1. **Text Orientation and Visibility Enhancements**
+   - Added consistent camera-facing behavior for text labels
+   - Improved text visibility with:
+     - Semi-transparent dark background
+     - Bold text with outlines
+     - Increased font size and contrast
+   - Fixed type-safety issues in drag controls
+   
+2. **Testing Results**
+   - Text remains readable at all camera angles
+   - Background improves readability against varying branch colors
+   - No unnatural flipping during node movement
+   - Performance remains smooth with text updates
+
+3. **Technical Improvements**
+   - Added proper type checking for material properties
+   - Improved texture update handling
+   - Added alphaTest to prevent transparency artifacts
+   - Properly disposed of textures and materials
+
+Next steps:
+1. Implement tapered branch geometry
+2. Test text behavior with tapered branches
+3. Consider adding text size scaling based on camera distance
+
+Note: The current implementation provides a solid foundation for the next phase of tapered branch development.
+
+### 2024-01-11 (Update 2)
+
+Successfully implemented improved text orientation in the MindMap3D component with several key technical learnings:
+
+1. **Text Orientation and Coordinate Systems**:
+   - Initial implementation had text perpendicular to branches due to incorrect basis matrix setup
+   - Key insight: The order of cross products matters for creating the local coordinate system
+   - Solution involved three key vectors:
+     ```typescript
+     const direction = endPoint.sub(startPoint).normalize();
+     const up = new THREE.Vector3(0, 1, 0);
+     const right = direction.cross(up).normalize();
+     const textUp = right.cross(direction).normalize();
+     ```
+   - The order of vectors in `makeBasis()` determines text alignment:
+     ```typescript
+     textMatrix.makeBasis(direction, textUp, right);  // Aligns text parallel to branch
+     ```
+
+2. **Text Rendering Improvements**:
+   - Switched to dark text (#333333) on transparent background for better readability
+   - Added white outline (rgba(255, 255, 255, 0.5)) for contrast against any background
+   - Increased font weight to bold and size to 48px for better visibility
+   - Canvas dimensions (512x128) provide good resolution without performance impact
+   - Using `alphaTest: 0.1` prevents transparency artifacts
+
+3. **Group-based Organization**:
+   - Created `branchGroup` to hold both branch and text meshes
+   - Benefits:
+     - Maintains parent-child relationships
+     - Simplifies position/rotation updates
+     - Ensures proper cleanup on removal
+     - Makes future animations easier to implement
+
+4. **Performance Considerations**:
+   - Proper disposal of geometries, materials, and textures prevents memory leaks
+   - Canvas texture updates only when necessary
+   - Text position updates efficiently during drag operations
+   - Mesh updates properly batched in the render loop
+
+5. **Technical Challenges Solved**:
+   - Text flipping: Fixed by establishing consistent local coordinate system
+   - Z-fighting: Resolved with proper depthWrite and alphaTest settings
+   - Text scaling: Maintained consistent size with appropriate geometry dimensions
+   - Update efficiency: Proper cleanup and disposal of Three.js objects
+
+6. **Code Organization Improvements**:
+   - Separated text creation and update logic for better maintainability
+   - Consistent coordinate system calculations in both `createBranch` and `updateBranches`
+   - Type-safe material and mesh handling
+   - Clear separation of geometry, material, and texture management
+
+Next Steps:
+1. Implement tapered branch geometry
+2. Add dynamic text scaling based on camera distance
+3. Consider curved text along branch path
+4. Optimize texture updates for better performance
+
+Key Takeaway: The success of the text orientation implementation relied on understanding the relationship between:
+1. The local coordinate system (direction, up, right vectors)
+2. The order of cross products for basis creation
+3. The proper matrix basis setup for orientation
+4. Group-based organization for maintaining relationships
+
+This implementation provides a solid foundation for the next phase of development, particularly for implementing tapered branches and curved text paths.
+
 

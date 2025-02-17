@@ -19,6 +19,7 @@
         startNode: THREE.Mesh;
         endNode: THREE.Mesh;
         textMesh: THREE.Mesh;
+        branchGroup: THREE.Group;
     }> = [];
     let isDragging = false;
     let isInitialized = false;
@@ -70,7 +71,8 @@
                 }
         }
     });
-        branches.forEach(({ branch, textMesh }) => {
+        branches.forEach(({ branch, textMesh, branchGroup }) => {
+            scene.remove(branchGroup);
             if (isMesh(branch)) {
                 branch.geometry.dispose();
                 if (branch.material) {
@@ -140,21 +142,19 @@
         dragControls.dispose();
         dragControls = new DragControls(threeNodes, camera, renderer.domElement);
 
-        dragControls.addEventListener('hoveron', function (event: any) {
-            if (!orbitControls) return;
+        dragControls.addEventListener('hoveron', (event) => {
             orbitControls.enabled = false;
-            const object = event.object;
-            if (isMesh(object) && object.material && 'emissive' in object.material) {
-                object.material.emissive.setHex(0x666666);
+            const mesh = event.object as THREE.Mesh;
+            if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                mesh.material.emissive.setHex(0x666666);
             }
         });
 
-        dragControls.addEventListener('hoveroff', function (event: any) {
-            if (!orbitControls) return;
+        dragControls.addEventListener('hoveroff', (event) => {
             orbitControls.enabled = true;
-            const object = event.object;
-            if (isMesh(object) && object.material && 'emissive' in object.material) {
-                object.material.emissive.setHex(0x000000);
+            const mesh = event.object as THREE.Mesh;
+            if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                mesh.material.emissive.setHex(0x000000);
             }
         });
 
@@ -214,8 +214,8 @@
         }
     }
 
-    function createNode(position: THREE.Vector3, nodeData: MindMapNode): THREE.Mesh {
-        if (!scene) return;
+    function createNode(position: THREE.Vector3, nodeData: MindMapNode): THREE.Mesh | undefined {
+        if (!scene) return undefined;
 
         const nodeGeometry = new THREE.SphereGeometry(nodeData.isCenter ? 0.75 : 0.5, 32, 32);
         const nodeMaterial = new THREE.MeshPhongMaterial({ 
@@ -250,12 +250,17 @@
     function createBranch(startNode: THREE.Mesh, endNode: THREE.Mesh) {
         if (!scene || !camera) return;
 
-        const points = [];
+        // Create a group to hold branch and text
+        const branchGroup = new THREE.Group();
+        scene.add(branchGroup);
+
+        // Calculate branch points relative to group
         const startPoint = startNode.position;
         const endPoint = endNode.position;
         const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
-        midPoint.y += 0.5; // Add a slight upward curve
+        midPoint.y += 0.5;
 
+        const points = [];
         for (let i = 0; i <= 20; i++) {
             const t = i / 20;
             const point = new THREE.Vector3();
@@ -280,54 +285,86 @@
         });
 
         const branch = new THREE.Mesh(branchGeometry, branchMaterial);
-        scene.add(branch);
-        
-        // Create text for the branch with larger size
+        branchGroup.add(branch);
+
+        // Create text with dark color and transparent background
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 512; // Increased from 256
-        canvas.height = 128; // Increased from 64
+        canvas.width = 512;
+        canvas.height = 128;
         
         if (context) {
-            context.font = '48px Arial'; // Increased from 24px
-            context.fillStyle = 'white';
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Add text with dark color
+            context.font = 'bold 48px Arial';
             context.textAlign = 'center';
-            // Use the end node's title for the branch text
-            context.fillText(endNode.userData.title || '', canvas.width / 2, canvas.height / 2);
+            context.textBaseline = 'middle';
+            
+            const text = endNode.userData.title || '';
+            // Add text outline in lighter color for contrast
+            context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            context.lineWidth = 4;
+            context.strokeText(text, canvas.width / 2, canvas.height / 2);
+            
+            // Add text fill in dark color
+            context.fillStyle = '#333333';
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
         }
         
         const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        
         const textMaterial = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
             side: THREE.DoubleSide,
-            depthWrite: false // This helps prevent z-fighting
+            depthWrite: false,
+            alphaTest: 0.1
         });
 
-        const textGeometry = new THREE.PlaneGeometry(2, 0.5); // Increased size
+        const textGeometry = new THREE.PlaneGeometry(2, 0.5);
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-        // Position text above the branch
-        const textPosition = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
-        textPosition.y += 0.5; // Increased offset
-        textMesh.position.copy(textPosition);
+        // Calculate direction for orientation
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+        const up = new THREE.Vector3(0, 1, 0);
         
-        // Make text always face the camera
-        scene.add(textMesh);
-        branches.push({ branch, startNode, endNode, textMesh });
+        // Create a local coordinate system for the text
+        const right = new THREE.Vector3().crossVectors(direction, up).normalize();
+        const textUp = new THREE.Vector3().crossVectors(right, direction).normalize();
+        
+        // Position text at midpoint relative to branch
+        const localMidpoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+        localMidpoint.y += 0.3; // Reduced offset
+        textMesh.position.copy(localMidpoint);
+        
+        // Orient text to align with branch direction
+        const textMatrix = new THREE.Matrix4();
+        textMatrix.makeBasis(direction, textUp, right);
+        textMesh.rotation.setFromRotationMatrix(textMatrix);
+        
+        branchGroup.add(textMesh);
+        
+        branches.push({ 
+            branch, 
+            startNode, 
+            endNode, 
+            textMesh,
+            branchGroup
+        });
     }
 
     function updateBranches() {
         if (!camera) return;
 
-        branches.forEach(({ branch, startNode, endNode, textMesh }) => {
-            // Update branch geometry
-            const points = [];
+        branches.forEach(({ branch, startNode, endNode, textMesh, branchGroup }) => {
             const startPoint = startNode.position;
             const endPoint = endNode.position;
             const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
             midPoint.y += 0.5;
 
+            const points = [];
             for (let i = 0; i <= 20; i++) {
                 const t = i / 20;
                 const point = new THREE.Vector3();
@@ -348,30 +385,55 @@
             branch.geometry.dispose();
             branch.geometry = newGeometry;
 
-            // Update text content and position
+            // Update text content with dark color
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.width = 512;
             canvas.height = 128;
             
             if (context) {
-                context.font = '48px Arial';
-                context.fillStyle = 'white';
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Add text with dark color
+                context.font = 'bold 48px Arial';
                 context.textAlign = 'center';
-                // Use the end node's title for the branch text
-                context.fillText(endNode.userData.title || '', canvas.width / 2, canvas.height / 2);
+                context.textBaseline = 'middle';
+                
+                const text = endNode.userData.title || '';
+                // Add text outline in lighter color for contrast
+                context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                context.lineWidth = 4;
+                context.strokeText(text, canvas.width / 2, canvas.height / 2);
+                
+                // Add text fill in dark color
+                context.fillStyle = '#333333';
+                context.fillText(text, canvas.width / 2, canvas.height / 2);
             }
             
             if (textMesh.material instanceof THREE.MeshBasicMaterial) {
                 const texture = new THREE.CanvasTexture(canvas);
+                texture.needsUpdate = true;
                 textMesh.material.map = texture;
                 textMesh.material.needsUpdate = true;
             }
 
-            const textPosition = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
-            textPosition.y += 0.5;
-            textMesh.position.copy(textPosition);
-            textMesh.lookAt(camera.position);
+            // Calculate direction for orientation
+            const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+            const up = new THREE.Vector3(0, 1, 0);
+            
+            // Create a local coordinate system for the text
+            const right = new THREE.Vector3().crossVectors(direction, up).normalize();
+            const textUp = new THREE.Vector3().crossVectors(right, direction).normalize();
+            
+            // Position text at midpoint relative to branch
+            const localMidpoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
+            localMidpoint.y += 0.3; // Reduced offset
+            textMesh.position.copy(localMidpoint);
+            
+            // Orient text to align with branch direction
+            const textMatrix = new THREE.Matrix4();
+            textMatrix.makeBasis(direction, textUp, right);
+            textMesh.rotation.setFromRotationMatrix(textMatrix);
         });
     }
 
@@ -392,14 +454,6 @@
         
         animationFrameId = requestAnimationFrame(animate);
         orbitControls.update();
-        
-        // Update text orientations to face camera
-        branches.forEach(({ textMesh }) => {
-            if (textMesh) {
-                textMesh.lookAt(camera.position);
-            }
-        });
-        
         renderer.render(scene, camera);
     }
 
@@ -417,8 +471,8 @@
                 }
             });
             
-        branches.forEach(({ branch, textMesh }) => {
-                scene.remove(branch);
+        branches.forEach(({ branch, textMesh, branchGroup }) => {
+                scene.remove(branchGroup);
             scene.remove(textMesh);
                 if (isMesh(branch)) {
                 branch.geometry.dispose();
