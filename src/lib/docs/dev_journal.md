@@ -668,4 +668,67 @@ Next Steps:
 
 Note: The UI now provides a clear view of Toit sessions and their tasks, making it easier for users to manage and track their progress.
 
+### 2024-01-12 (Update 3)
+
+Enhanced ToitTorus component with circular task visualization:
+
+1. **Circular Task Segments**:
+   - Implemented tasks as arc segments around a circle
+   - Each segment represents a task with status-based coloring:
+     ```typescript
+     // Segment path calculation
+     function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number): string {
+       const start = polarToCartesian(x, y, radius, endAngle);
+       const end = polarToCartesian(x, y, radius, startAngle);
+       const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+       return [
+         "M", start.x, start.y,
+         "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+       ].join(" ");
+     }
+     ```
+   - Yellow for pending tasks, green for completed
+   - Interactive segments with hover effects
+
+2. **Progress Visualization**:
+   - Sweeping progress indicator around the circle
+   - Updates dynamically as tasks are completed
+   - Smooth transitions for status changes
+   - Progress calculation:
+     ```typescript
+     $: progress = tasks.length > 0
+       ? (tasks.filter(task => task.status === 'completed').length / tasks.length) * 100
+       : 0;
+     ```
+
+3. **Database Integration**:
+   - Real-time task status updates
+   - Optimistic UI updates with database persistence
+   - Error handling for failed updates
+   - Status toggle implementation:
+     ```typescript
+     async function toggleTaskStatus(task: any) {
+       const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+       const { error } = await supabase
+         .from('toit_tasks')
+         .update({ status: newStatus })
+         .eq('task_id', task.task_id);
+     }
+     ```
+
+4. **Visual Enhancements**:
+   - Clean, minimalist design
+   - Responsive SVG layout
+   - Smooth animations and transitions
+   - Clear visual feedback for user interactions
+
+Next Steps:
+1. Consider adding task labels within segments
+2. Implement task reordering functionality
+3. Add progress animations
+4. Consider adding subtask visualization
+5. Enhance accessibility features
+
+The ToitTorus component now provides a clear visual representation of task progress while maintaining functional task management capabilities. The circular design effectively communicates both individual task status and overall session progress.
+
 

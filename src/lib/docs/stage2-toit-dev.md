@@ -172,31 +172,95 @@ This implementation provides a solid foundation for the Toit task management sys
 - **Route and Model Adjustments**:
   - Update the Toit route to handle a "Toit session" or task grouping.
   - Clarify the process by which individual subtasks are merged into a Toit.
+- **Visual Task Management**:
+  - Implement circular task visualization with the ToitTorus component.
+  - Enable interactive task status management.
+  - Provide clear progress indication.
 
-### Steps
+### Implementation Progress
 
-1. **Define the Three-Piece Toit Structure**  
-   - Identify the components that make up a Toit task.
-     - Example: _Primary Task (central concept)_, _Grouped Subtasks_, and an optional _Review/Next Steps_ section.
-   - Document the intended grouping logic. For instance, the first subtask could act as an anchor while the next two provide context or details.
+1. **Toit Session Creation**  
+   - Created form structure for session creation
+   - Implemented mindmap selection
+   - Added node selection from chosen mindmap
+   - Database integration with proper RLS policies
 
-2. **Update Toit Routes and API Endpoints**  
-   - Modify or extend the current Toit routes (possibly within the API under `/src/routes/api/`) to accept grouped subtasks.
-   - Create endpoints (or add parameters) that facilitate:
-     - **Toit Creation Phase**: Accept a set of subtasks and mark them for grouping.
-     - **Toit Validation Phase**: Allow users to review and modify how subtasks are combined into a Toit.
-     
-3. **Database Considerations and Suggested Schema Enhancements**  
-   - Although no schema change is required immediately, consider the following suggestions:
-     - **Mind Map Nodes Augmentation**: Add an optional field such as `origin_task_id` or `Toit_group_id` to track the provenance of subtasks.
-     - **Toit Task Linking**: In the `toit_tasks` table, explore including a reference to the associated mind map node(s) that were generated from the AI subtasks.
-   - Document these suggestions so that when the application scales, we can create proper migration scripts.
-     
-4. **Iterative Development and User Testing**  
-   - Implement the grouping logic in steps.
-   - Validate that, after grouping, a Toit task correctly reflects the three component pieces.
-   - Adjust the UI (list view or mind map overlay) so that users can clearly see the formed Toit and can interact with it.
-   - Collect manual user testing feedback on the grouping behavior, clarity of visual presentation, and overall usability.
+2. **ToitTorus Component Implementation**
+   - Circular task visualization:
+     ```typescript
+     // Task segment calculation
+     function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number): string {
+       const start = polarToCartesian(x, y, radius, endAngle);
+       const end = polarToCartesian(x, y, radius, startAngle);
+       const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+       return [
+         "M", start.x, start.y,
+         "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+       ].join(" ");
+     }
+     ```
+   - Interactive task status management:
+     - Click to toggle task completion
+     - Real-time database updates
+     - Visual status indication
+   - Progress tracking:
+     - Sweeping progress indicator
+     - Dynamic progress calculation
+     - Smooth transitions
+
+3. **Database Integration**
+   - Proper RLS policy implementation
+   - Real-time task status updates
+   - Optimistic UI updates
+   - Error handling and recovery
+
+### Current Features
+
+1. **Session Management**
+   - Create new Toit sessions
+   - Select tasks from mindmaps
+   - View existing sessions
+   - Track session progress
+
+2. **Task Visualization**
+   - Circular task arrangement
+   - Status-based coloring
+   - Interactive task segments
+   - Overall progress indication
+
+3. **Task Management**
+   - Toggle task completion
+   - View task details
+   - Track completion status
+   - Monitor session progress
+
+### Next Steps
+
+1. **Enhanced Visualization**
+   - Add task labels to segments
+   - Implement task reordering
+   - Add progress animations
+   - Consider subtask visualization
+
+2. **User Experience**
+   - Add keyboard shortcuts
+   - Enhance accessibility
+   - Improve error messaging
+   - Add user preferences
+
+3. **Data Management**
+   - Implement session archiving
+   - Add task history
+   - Enable data export
+   - Add batch operations
+
+4. **Testing and Validation**
+   - Add comprehensive testing
+   - Validate edge cases
+   - Test performance
+   - Gather user feedback
+
+The implementation now provides a solid foundation for task management with clear visual feedback and intuitive interaction. The circular design effectively represents the Toit concept while maintaining functionality and user experience.
 
 ---
 
