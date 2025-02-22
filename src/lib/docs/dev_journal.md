@@ -453,4 +453,219 @@ Key Takeaway: The success of the text orientation implementation relied on under
 
 This implementation provides a solid foundation for the next phase of development, particularly for implementing tapered branches and curved text paths.
 
+### 2024-01-11 (Update 3)
+
+Implemented initial beta-app route following the UI-dev-v1.md specifications:
+
+1. **Beta-App Route Implementation**:
+   - Created new `/beta-app` route with sequential flow layout
+   - Implemented two-step process:
+     1. Task input page with form
+     2. Mind map visualization page
+   - Added proper authentication handling
+   - Integrated existing MindMap3D component
+
+2. **Landing Page Updates**:
+   - Simplified navigation as per UI-dev-v1.md
+   - Added prominent Beta-App link
+   - Retained only essential navigation items:
+     - Sign In
+     - Sign Up
+     - Logout (for authenticated users)
+     - Beta-App link
+
+3. **Authentication Flow**:
+   - Server-side authentication check
+   - Proper redirection to login
+   - Session management
+   - Protected route access
+
+4. **UI Components**:
+   - Used Shadcn-Svelte components for consistency
+   - Implemented neumorphic design elements
+   - Added proper loading and error states
+   - Responsive layout for all screen sizes
+
+Next Steps:
+1. Implement AI task splitting integration
+2. Add proper mind map data handling
+3. Enhance visual feedback during processing
+4. Add comprehensive error handling
+5. Implement proper type safety across components
+
+Note: This implementation provides the foundation for testing the sequential flow approach to task creation and visualization. The next phase will focus on integrating the AI functionality and enhancing the mind map visualization.
+
+### 2024-01-11 (Update 4)
+
+Separated beta-app and beta-map routes for better organization:
+
+1. **Beta-App Route Updates**:
+   - Converted to a mind map listing and creation interface
+   - Shows existing mind maps in a card-based layout
+   - Provides creation form with proper validation
+   - Handles navigation to beta-map route
+
+2. **New Beta-Map Route**:
+   - Dedicated route for mind map visualization
+   - Takes mind map ID as URL parameter
+   - Protected route with authentication
+   - Proper error handling for missing IDs
+   - Integrated MindMap3D component
+
+3. **Navigation Flow**:
+   - Users start at beta-app to view existing maps
+   - Can create new maps or select existing ones
+   - Redirected to beta-map for visualization
+   - Back button returns to beta-app listing
+
+4. **Authentication & Data Flow**:
+   - Both routes protected with authentication
+   - Proper session handling
+   - Data passing through URL parameters
+   - Server-side validation of mind map access
+
+Next Steps:
+1. Implement mind map data loading in beta-map route
+2. Add AI task splitting in beta-app creation
+3. Enhance error handling and loading states
+4. Add proper TypeScript types for mind map data
+5. Implement real-time updates for collaborative editing
+
+Note: This separation provides a clearer user flow and better code organization. The beta-app route now serves as a dashboard for mind map management, while beta-map focuses solely on visualization and interaction.
+
+### 2024-01-12
+
+Started implementing Phase 2 of Toit development - creating Toit sessions from mindmap nodes:
+
+1. **Initial Implementation**:
+   - Created basic form structure for Toit session creation
+   - Added mindmap selection functionality
+   - Implemented node selection from chosen mindmap
+   - Added session creation with task generation
+
+2. **Key Components**:
+   - Form for session creation with:
+     - Session name input
+     - Mindmap selector
+     - Task checkboxes for selected mindmap
+   - Database integration:
+     - Creates toit_session entry
+     - Creates toit_tasks entries for selected nodes
+     - Maintains proper relationships between tasks and nodes
+
+3. **Authentication Flow**:
+   - Added server-side authentication check
+   - Proper redirection to login page
+   - Session data passing to client
+
+4. **Current Challenges**:
+   - Need to resolve type issues with SvelteKit types
+   - Need to implement proper error handling for database operations
+   - Need to enhance the UI/UX for task selection
+   - Need to implement the ToitTorus preview functionality
+
+5. **Next Steps**:
+   1. Fix TypeScript issues in server and page load functions
+   2. Implement proper data loading with RLS policies
+   3. Enhance ToitTorus preview to show selected tasks
+   4. Add proper error handling and user feedback
+   5. Implement session management and task status updates
+   6. Add proper loading states and transitions
+
+Note: The current implementation provides basic functionality but needs refinement in terms of types, error handling, and user experience. The next phase will focus on these improvements while maintaining the core functionality.
+
+### 2024-01-12 (Update 1)
+
+Fixed RLS policy violation in Toit session creation:
+
+1. **RLS Policy Compliance**:
+   - Added proper user_id when creating toit sessions
+   - Fixed mindmap loading to only show user's mindmaps
+   - Ensures proper data ownership and security
+
+2. **Key Changes**:
+   ```typescript
+   // Mindmap loading with user filter
+   const { data: mindmapsData } = await supabase
+     .from('mindmaps')
+     .select('*')
+     .eq('user_id', data.user.id);
+
+   // Toit session creation with user ownership
+   const { data: sessionData } = await supabase
+     .from('toit_sessions')
+     .insert([{
+       name: sessionName,
+       start_time: new Date().toISOString(),
+       status: 'planned',
+       user_id: data.user.id // Critical for RLS
+     }]);
+   ```
+
+3. **Security Improvements**:
+   - Proper data isolation between users
+   - RLS policies enforced correctly
+   - Data ownership maintained throughout
+
+Next Steps:
+1. Add similar user filtering for task queries
+2. Implement proper error messages for permission issues
+3. Add data validation before submission
+4. Consider adding user role-based access control
+
+Note: Always ensure proper user ownership when creating new records to comply with RLS policies. This is critical for data security and isolation between users.
+
+### 2024-01-12 (Update 2)
+
+Enhanced Toit session UI with session and task display:
+
+1. **Session Management UI**:
+   - Added grid view of all user's Toit sessions
+   - Implemented session selection and task display
+   - Added auto-loading of most recent session
+   - Real-time updates after session creation
+
+2. **Data Loading Improvements**:
+   ```typescript
+   // Load sessions with ordering
+   const { data: sessions } = await supabase
+     .from('toit_sessions')
+     .select('*')
+     .eq('user_id', data.user.id)
+     .order('created_at', { ascending: false });
+
+   // Load tasks with related node data
+   const { data: tasks } = await supabase
+     .from('toit_tasks')
+     .select(`
+       *,
+       mindmap_nodes (
+         title,
+         content
+       )
+     `)
+     .eq('session_id', sessionId);
+   ```
+
+3. **UI Components Added**:
+   - Session cards with status and date
+   - Task cards showing duration and status
+   - Responsive grid layouts
+   - Interactive session selection
+
+4. **UX Improvements**:
+   - Automatic loading of recent session
+   - Visual feedback for selected session
+   - Clear task organization
+   - Smooth transitions and hover effects
+
+Next Steps:
+1. Implement task status updates
+2. Add session progress tracking
+3. Enhance task card interactions
+4. Implement session filtering and search
+5. Add session deletion functionality
+
+Note: The UI now provides a clear view of Toit sessions and their tasks, making it easier for users to manage and track their progress.
+
 

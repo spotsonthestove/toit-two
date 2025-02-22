@@ -42,10 +42,10 @@ async function handleLogout() {
       <a href="/toit" class="text-sm font-medium hover:underline underline-offset-4">
         Toit
       </a>
+      <a href="/beta-app" class="text-sm font-medium hover:underline underline-offset-4">
+        Beta App
+      </a>
       {#if isAuthenticated}
-        <a href="/dashboard" class="text-sm font-medium hover:underline underline-offset-4">
-          Dashboard
-        </a>
         <Button variant="ghost" on:click={handleLogout}>
           Logout
         </Button>
