@@ -4,6 +4,8 @@
   export let isPreview: boolean = false;
 
   import { supabase } from '$lib/supabaseClient';
+  import { onMount } from 'svelte';
+  import { fade, scale } from 'svelte/transition';
 
   // Calculate progress based on completed tasks
   $: progress = tasks.length > 0
@@ -34,6 +36,30 @@
     };
   }
 
+  // Calculate segment angles based on task duration
+  function calculateSegmentAngles() {
+    if (tasks.length === 0) return [];
+    
+    // Get total duration
+    const totalDuration = tasks.reduce((sum, task) => sum + (task.duration_minutes || 25), 0);
+    
+    // Calculate angles
+    let startAngle = 0;
+    return tasks.map(task => {
+      const duration = task.duration_minutes || 25;
+      const segmentAngle = (duration / totalDuration) * 360;
+      const segment = {
+        startAngle,
+        endAngle: startAngle + segmentAngle,
+        task
+      };
+      startAngle += segmentAngle;
+      return segment;
+    });
+  }
+
+  $: segments = calculateSegmentAngles();
+
   // Function to toggle task status
   async function toggleTaskStatus(task: any) {
     if (!sessionId || isPreview) return;
@@ -55,167 +81,158 @@
       console.error('Error updating task status:', err);
     }
   }
+
+  // Get status color class based on task status
+  function getStatusColor(status: string) {
+    switch(status) {
+      case 'completed': return 'bg-gradient-completed';
+      case 'in_progress': return 'bg-gradient-progress';
+      default: return 'bg-gradient-pending';
+    }
+  }
+
+  // Get status text color based on task status
+  function getStatusTextColor(status: string) {
+    switch(status) {
+      case 'completed': return 'text-green-tone-ink';
+      case 'in_progress': return 'text-walnut-shell';
+      default: return 'text-good-as-gold';
+    }
+  }
+
+  // Animation for task completion
+  let animatingTaskId: string | null = null;
+  
+  function handleTaskClick(task: any) {
+    if (!sessionId || isPreview) return;
+    
+    animatingTaskId = task.task_id;
+    setTimeout(() => {
+      toggleTaskStatus(task);
+      setTimeout(() => {
+        animatingTaskId = null;
+      }, 300);
+    }, 300);
+  }
 </script>
 
-<div class="toit-container">
-  <div class="toit-torus">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <!-- Background circle -->
-      <circle class="torus-bg" cx="50" cy="50" r="45" />
+<div class="w-full flex flex-col items-center gap-8 p-4">
+  <div class="w-full max-w-xs mx-auto relative">
+    <div class="relative w-full pb-[100%]">
+      <!-- Neumorphic background circle -->
+      <div class="absolute inset-0 rounded-full shadow-neumorph bg-speed-of-light"></div>
       
-      <!-- Task segments -->
-      {#each tasks as task, i}
-        {@const segmentAngle = 360 / tasks.length}
-        {@const startAngle = i * segmentAngle}
-        {@const endAngle = startAngle + segmentAngle}
-        <path
-          class="task-segment {task.status === 'completed' ? 'completed' : ''}"
-          d={describeArc(50, 50, 45, startAngle, endAngle)}
-          on:click={() => toggleTaskStatus(task)}
+      <!-- SVG for task segments and progress -->
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 w-full h-full z-10">
+        <!-- Task segments -->
+        {#each segments as segment, i}
+          <path
+            class="fill-none stroke-[8] cursor-pointer transition-all duration-300 ease-in-out hover:stroke-[10] hover:brightness-110"
+            class:stroke-gradient-completed={segment.task.status === 'completed'}
+            class:stroke-gradient-pending={segment.task.status === 'pending'}
+            class:stroke-gradient-progress={segment.task.status === 'in_progress'}
+            d={describeArc(50, 50, 45, segment.startAngle, segment.endAngle)}
+            on:click={() => handleTaskClick(segment.task)}
+            in:fade={{ delay: i * 100, duration: 500 }}
+          >
+            <title>{segment.task.name} ({segment.task.duration_minutes}min)</title>
+          </path>
+        {/each}
+        
+        <!-- Progress indicator -->
+        <circle
+          class="fill-none stroke-green-tone-ink/20 stroke-[2] stroke-linecap-round pointer-events-none transition-all duration-300 ease-in-out"
+          cx="50"
+          cy="50"
+          r="45"
+          style="stroke-dasharray: {circumference}px; stroke-dashoffset: {strokeDashoffset}px;"
         />
-      {/each}
+      </svg>
       
-      <!-- Progress indicator -->
-      <circle
-        class="torus-progress"
-        cx="50"
-        cy="50"
-        r="45"
-        style="stroke-dashoffset: {strokeDashoffset}px;"
-      />
-    </svg>
+      <!-- Center content -->
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full flex flex-col justify-center items-center bg-speed-of-light/70 backdrop-blur-md shadow-glass z-20">
+        <div class="text-2xl font-bold text-shadow-moss">{Math.round(progress)}%</div>
+        <div class="text-xs text-shadow-moss">Complete</div>
+      </div>
+    </div>
   </div>
 
   {#if tasks.length === 0}
-    <div class="no-tasks">
-      {#if isPreview}
-        Select tasks to preview
-      {:else}
-        No tasks in this session
-      {/if}
+    <div class="w-full max-w-xl" in:fade={{ duration: 300 }}>
+      <div class="glass-panel p-4 text-center text-shadow-moss">
+        {#if isPreview}
+          Select tasks to preview
+        {:else}
+          No tasks in this session
+        {/if}
+      </div>
     </div>
   {:else}
-    <div class="tasks-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Status</th>
-            <th>Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each tasks as task}
-            <tr>
-              <td>{task.name}</td>
-              <td class="status {task.status}">{task.status}</td>
-              <td>{task.duration_minutes}min</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+    <div class="w-full max-w-xl flex flex-col gap-3">
+      {#each tasks as task, i}
+        <div 
+          class="neumorph-panel transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-neumorph-sm overflow-hidden"
+          class:border-l-4={task.status === 'completed'}
+          class:border-green-tone-ink={task.status === 'completed'}
+          in:scale={{ delay: i * 50, duration: 300, start: 0.95 }}
+          class:shadow-neumorph-pressed={animatingTaskId === task.task_id}
+        >
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+              <div class="font-semibold text-shadow-moss">{task.name}</div>
+              <div class="text-xs text-shadow-moss bg-neugray-200/30 px-2 py-1 rounded-full">
+                {task.duration_minutes}min
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full {getStatusColor(task.status)}"></div>
+              <div class="text-xs capitalize {getStatusTextColor(task.status)}">
+                {task.status.replace('_', ' ')}
+              </div>
+              <button 
+                class="ml-auto text-xs py-1 px-2 rounded bg-white shadow-neumorph-sm hover:shadow-neumorph-pressed active:shadow-neumorph-pressed text-shadow-moss transition-all duration-200"
+                on:click={() => handleTaskClick(task)}
+                disabled={isPreview}
+              >
+                {task.status === 'completed' ? 'Mark Incomplete' : 'Mark Complete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>
 
 <style>
-  .toit-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    padding: 1rem;
+  /* Custom styles for SVG gradients */
+  :global(.stroke-gradient-completed) {
+    stroke: url(#gradientCompleted);
   }
-
-  .toit-torus {
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
+  
+  :global(.stroke-gradient-pending) {
+    stroke: url(#gradientPending);
   }
-
-  svg {
-    width: 100%;
-    height: auto;
-  }
-
-  .torus-bg {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.1);
-    stroke-width: 5;
-  }
-
-  .task-segment {
-    fill: none;
-    stroke: #ffd54f;
-    stroke-width: 8;
-    cursor: pointer;
-    transition: stroke 0.3s ease;
-  }
-
-  .task-segment:hover {
-    stroke-width: 10;
-  }
-
-  .task-segment.completed {
-    stroke: #4caf50;
-  }
-
-  .torus-progress {
-    fill: none;
-    stroke: rgba(76, 175, 80, 0.3);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-dasharray: 282.7433388230814;
-    transition: stroke-dashoffset 0.3s ease;
-    pointer-events: none;
-  }
-
-  .no-tasks {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 1.2rem;
-    text-align: center;
-  }
-
-  .tasks-table {
-    width: 100%;
-    max-width: 600px;
-    margin-top: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th, td {
-    padding: 0.75rem;
-    text-align: left;
-    color: white;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  th {
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .status {
-    text-transform: capitalize;
-  }
-
-  .status.completed {
-    color: #4caf50;
-  }
-
-  .status.pending {
-    color: #ffd54f;
-  }
-
-  .status.in_progress {
-    color: #2196f3;
+  
+  :global(.stroke-gradient-progress) {
+    stroke: url(#gradientInProgress);
   }
 </style>
+
+<svg width="0" height="0" class="absolute">
+  <!-- Gradient definitions for task segments -->
+  <defs>
+    <linearGradient id="gradientCompleted" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#47553C" />
+      <stop offset="100%" stop-color="#2C3830" />
+    </linearGradient>
+    <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D3BA75" />
+      <stop offset="100%" stop-color="#AA8344" />
+    </linearGradient>
+    <linearGradient id="gradientInProgress" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#AA8344" />
+      <stop offset="100%" stop-color="#D3BA75" />
+    </linearGradient>
+  </defs>
+</svg>
