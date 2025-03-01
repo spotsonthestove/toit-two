@@ -383,3 +383,29 @@ export async function initializeNewMindmap(mindmapId: number) {
         throw error;
     }
 }
+
+// Get a single mind map by ID
+export async function getMindMapById(mindmapId: number) {
+  const { data, error } = await supabase
+    .from('mindmaps')
+    .select(`
+      mindmap_id,
+      name,
+      description,
+      created_at,
+      mindmap_nodes (
+        node_id,
+        content,
+        x,
+        y,
+        z,
+        parent_node_id,
+        node_type
+      )
+    `)
+    .eq('mindmap_id', mindmapId)
+    .single();
+  
+  if (error) throw error;
+  return data;
+}

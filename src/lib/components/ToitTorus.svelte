@@ -5,7 +5,7 @@
 
   import { supabase } from '$lib/supabaseClient';
   import { onMount } from 'svelte';
-  import { fade, scale } from 'svelte/transition';
+  import { fade, scale, fly } from 'svelte/transition';
 
   // Calculate progress based on completed tasks
   $: progress = tasks.length > 0
@@ -102,6 +102,7 @@
 
   // Animation for task completion
   let animatingTaskId: string | null = null;
+  let showCelebration = false;
   
   function handleTaskClick(task: any) {
     if (!sessionId || isPreview) return;
@@ -109,6 +110,18 @@
     animatingTaskId = task.task_id;
     setTimeout(() => {
       toggleTaskStatus(task);
+      
+      // If this completes the last task, show celebration
+      if (task.status !== 'completed' && 
+          tasks.filter(t => t.status !== 'completed').length === 1) {
+        setTimeout(() => {
+          showCelebration = true;
+          setTimeout(() => {
+            showCelebration = false;
+          }, 3000);
+        }, 300);
+      }
+      
       setTimeout(() => {
         animatingTaskId = null;
       }, 300);
@@ -137,11 +150,54 @@
           >
             <title>{segment.task.name} ({segment.task.duration_minutes}min)</title>
           </path>
+          
+          <!-- Enhanced segment labels -->
+          {#if segment.endAngle - segment.startAngle > 30}
+            <!-- Calculate label position -->
+            {#each [{ 
+              midAngle: (segment.startAngle + segment.endAngle) / 2,
+              labelPos: polarToCartesian(50, 50, 35, (segment.startAngle + segment.endAngle) / 2)
+            }] as labelData}
+              <g 
+                class="pointer-events-none"
+                in:fade={{ delay: i * 100 + 200, duration: 300 }}
+              >
+                <!-- Small dot at the segment -->
+                <circle 
+                  cx={labelData.labelPos.x} 
+                  cy={labelData.labelPos.y} 
+                  r="1.5" 
+                  class="fill-white"
+                />
+                
+                <!-- Task name label -->
+                <text 
+                  x={labelData.labelPos.x} 
+                  y={labelData.labelPos.y} 
+                  text-anchor="middle" 
+                  dominant-baseline="middle" 
+                  class="text-[3px] fill-white font-medium"
+                  transform={`rotate(${labelData.midAngle}, ${labelData.labelPos.x}, ${labelData.labelPos.y})`}
+                >
+                  {segment.task.name.length > 10 ? segment.task.name.substring(0, 10) + '...' : segment.task.name}
+                </text>
+              </g>
+            {/each}
+          {/if}
         {/each}
         
-        <!-- Progress indicator -->
+        <!-- Progress indicator with animation -->
         <circle
-          class="fill-none stroke-green-tone-ink/20 stroke-[2] stroke-linecap-round pointer-events-none transition-all duration-300 ease-in-out"
+          class="fill-none stroke-green-tone-ink/20 stroke-[2] stroke-linecap-round pointer-events-none transition-all duration-1000 ease-in-out"
+          cx="50"
+          cy="50"
+          r="45"
+          style="stroke-dasharray: {circumference}px; stroke-dashoffset: {strokeDashoffset}px;"
+        />
+        
+        <!-- Animated progress glow effect -->
+        <circle
+          class="fill-none stroke-green-tone-ink/10 stroke-[4] stroke-linecap-round pointer-events-none blur-[2px] transition-all duration-1000 ease-in-out"
           cx="50"
           cy="50"
           r="45"
@@ -151,8 +207,15 @@
       
       <!-- Center content -->
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full flex flex-col justify-center items-center bg-speed-of-light/70 backdrop-blur-md shadow-glass z-20">
-        <div class="text-2xl font-bold text-shadow-moss">{Math.round(progress)}%</div>
+        <div class="text-2xl font-bold text-shadow-moss transition-all duration-500">{Math.round(progress)}%</div>
         <div class="text-xs text-shadow-moss">Complete</div>
+        
+        <!-- Celebration animation when all tasks are completed -->
+        {#if showCelebration}
+          <div class="absolute inset-0 flex items-center justify-center" in:scale={{ duration: 300, start: 0.5 }} out:fade>
+            <div class="text-3xl">🎉</div>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
@@ -171,10 +234,10 @@
     <div class="w-full max-w-xl flex flex-col gap-3">
       {#each tasks as task, i}
         <div 
-          class="neumorph-panel transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-neumorph-sm overflow-hidden"
+          class="neumorph-panel-sm transition-all duration-200 ease-in-out hover-lift overflow-hidden"
           class:border-l-4={task.status === 'completed'}
           class:border-green-tone-ink={task.status === 'completed'}
-          in:scale={{ delay: i * 50, duration: 300, start: 0.95 }}
+          in:fly={{ delay: i * 50, duration: 300, y: 20 }}
           class:shadow-neumorph-pressed={animatingTaskId === task.task_id}
         >
           <div class="p-4">

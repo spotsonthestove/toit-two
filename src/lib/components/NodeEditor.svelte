@@ -23,32 +23,31 @@
 </script>
 
 {#if $selectedNode}
-  <div class="fixed right-4 top-4 w-80 p-4 bg-white shadow-lg rounded-lg">
-    <h3 class="text-lg font-semibold mb-4">Edit Node</h3>
+  <div class="fixed right-4 top-4 w-80 glass-panel transition-all duration-300 z-50">
+    <h3 class="text-lg font-semibold mb-4 text-shadow-moss">Edit Node</h3>
     <form on:submit|preventDefault={handleSave} class="space-y-4">
       <div>
-        <Label for="nodeTitle">Title</Label>
-        <Input id="nodeTitle" bind:value={$selectedNode.title} required />
+        <Label for="nodeTitle" class="text-shadow-moss">Title</Label>
+        <Input id="nodeTitle" bind:value={$selectedNode.title} required class="input-field" />
       </div>
       <div>
-        <Label for="nodeDescription">Description</Label>
-        <Textarea id="nodeDescription" bind:value={$selectedNode.description} />
+        <Label for="nodeDescription" class="text-shadow-moss">Description</Label>
+        <Textarea id="nodeDescription" bind:value={$selectedNode.description} class="input-field" />
       </div>
       <div>
-        <Label for="nodeType">Node Type</Label>
-        <Select bind:value={$selectedNode.nodeType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select node type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="concept">Concept</SelectItem>
-            <SelectItem value="note">Note</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label for="nodeType" class="text-shadow-moss">Node Type</Label>
+        <select 
+          id="nodeType"
+          bind:value={$selectedNode.nodeType} 
+          class="input-field"
+        >
+          <option value="concept">Concept</option>
+          <option value="note">Note</option>
+        </select>
       </div>
       <div class="flex justify-end space-x-2">
-        <Button type="button" variant="outline" on:click={handleClose}>Cancel</Button>
-        <Button type="submit">Save</Button>
+        <Button type="button" variant="ghost" class="btn-ghost" on:click={handleClose}>Cancel</Button>
+        <Button type="submit" class="btn-primary">Save</Button>
       </div>
     </form>
   </div>

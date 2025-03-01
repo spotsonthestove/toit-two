@@ -82,9 +82,9 @@
     }
 </script>
 
-<form on:submit={handleSubmit} class="space-y-4">
+<form on:submit={handleSubmit} class="glass-panel space-y-4">
     <div>
-        <label class="block text-white mb-2">Title</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Title</label>
         <input 
             type="text" 
             value={localTitle}
@@ -95,7 +95,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Description</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Description</label>
         <textarea 
             value={localDescription}
             on:input={handleDescriptionInput}
@@ -105,7 +105,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Node Type</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Node Type</label>
         <select bind:value={localNodeType} class="input-field">
             {#each nodeTypes as type}
                 <option value={type.value}>{type.label}</option>
@@ -114,7 +114,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Parent ID</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Parent ID</label>
         <input 
             type="number" 
             bind:value={localParentId} 
@@ -124,10 +124,10 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Position</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Position</label>
         <div class="grid grid-cols-3 gap-2">
             <div>
-                <label class="block text-white text-sm mb-1">X</label>
+                <label class="block text-shadow-moss text-sm mb-1">X</label>
                 <input 
                     type="number" 
                     value={position.x} 
@@ -136,7 +136,7 @@
                 />
             </div>
             <div>
-                <label class="block text-white text-sm mb-1">Y</label>
+                <label class="block text-shadow-moss text-sm mb-1">Y</label>
                 <input 
                     type="number" 
                     value={position.y} 
@@ -145,7 +145,7 @@
                 />
             </div>
             <div>
-                <label class="block text-white text-sm mb-1">Z</label>
+                <label class="block text-shadow-moss text-sm mb-1">Z</label>
                 <input 
                     type="number" 
                     value={position.z} 
@@ -156,26 +156,8 @@
         </div>
     </div>
     
-    <div class="flex gap-2">
-        <button type="submit" class="btn-primary flex-1">Save</button>
-        <button 
-            type="button" 
-            class="btn-secondary flex-1" 
-            on:click={() => dispatch('addChild', { parentId: nodeId })}
-        >
-            Add Child Node
-        </button>
-        <button 
-            type="button" 
-            class="btn-secondary flex-1" 
-            on:click={() => dispatch('close')}
-        >
-            Cancel
-        </button>
-    </div>
-
     <div>
-        <label class="block text-white mb-2">Status</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Status</label>
         <select bind:value={localStatus} class="input-field">
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
@@ -184,7 +166,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Priority</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Priority</label>
         <input 
             type="number" 
             bind:value={localPriority}
@@ -195,7 +177,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Estimated Duration</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Estimated Duration</label>
         <input 
             type="number" 
             bind:value={localEstimatedDuration}
@@ -204,7 +186,7 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Tags</label>
+        <label class="block text-shadow-moss mb-2 font-medium">Tags</label>
         <input 
             type="text" 
             bind:value={localTags}
@@ -213,25 +195,37 @@
     </div>
 
     <div>
-        <label class="block text-white mb-2">Color</label>
-        <input 
-            type="color" 
-            bind:value={localColor}
-            class="input-field"
-        />
+        <label class="block text-shadow-moss mb-2 font-medium">Color</label>
+        <div class="flex items-center gap-2">
+            <input 
+                type="color" 
+                bind:value={localColor}
+                class="w-10 h-10 rounded-full overflow-hidden shadow-neumorph-sm"
+            />
+            <span class="text-shadow-moss text-sm">{localColor}</span>
+        </div>
+    </div>
+    
+    <div class="flex gap-2 pt-2">
+        <button type="submit" class="btn-primary flex-1 transition-all duration-200">Save</button>
+        <button 
+            type="button" 
+            class="btn-secondary flex-1 transition-all duration-200" 
+            on:click={() => dispatch('addChild', { parentId: nodeId })}
+        >
+            Add Child Node
+        </button>
+        <button 
+            type="button" 
+            class="btn-ghost flex-1 transition-all duration-200" 
+            on:click={() => dispatch('close')}
+        >
+            Cancel
+        </button>
     </div>
 </form>
 
 <style>
-    .input-field {
-        @apply w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500;
-    }
-
-    .btn-primary {
-        @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800;
-    }
-
-    .btn-secondary {
-        @apply px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800;
-    }
+    /* These styles are now defined in app.css as utility classes */
+    /* We can remove them from this component */
 </style>

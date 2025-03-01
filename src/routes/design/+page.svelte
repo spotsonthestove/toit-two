@@ -1,7 +1,9 @@
+<!-- Design System Showcase Page -->
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
   import { Button } from "$lib/components/ui/button";
   import ToitTorus from '$lib/components/ToitTorus.svelte';
+  import { onMount } from 'svelte';
 
   // Sample tasks for ToitTorus demo
   const demoTasks = [
@@ -74,6 +76,37 @@
     { name: 'neugray-800', class: 'bg-neugray-800', text: 'text-white' },
     { name: 'neugray-900', class: 'bg-neugray-900', text: 'text-white' },
   ];
+
+  // Interactive demo states
+  let activeTab = 'components';
+  let hoverState = false;
+  let pressedState = false;
+  let selectedColor = forestryColors[0];
+
+  // Animation demo
+  let showAnimation = false;
+  function triggerAnimation() {
+    showAnimation = true;
+    setTimeout(() => {
+      showAnimation = false;
+    }, 2000);
+  }
+
+  // Form demo
+  let demoName = '';
+  let demoEmail = '';
+  let demoMessage = '';
+  let formSubmitted = false;
+
+  function handleFormSubmit() {
+    formSubmitted = true;
+    setTimeout(() => {
+      demoName = '';
+      demoEmail = '';
+      demoMessage = '';
+      formSubmitted = false;
+    }, 3000);
+  }
 </script>
 
 <svelte:head>
@@ -83,192 +116,337 @@
 <div class="container mx-auto px-4 py-8">
   <div class="mb-8" in:fade={{ duration: 300, delay: 100 }}>
     <h1 class="text-3xl font-bold forestry-gradient-text mb-2">Toit Design System</h1>
-    <p class="text-shadow-moss">A showcase of neumorphic and glassmorphic UI components with forestry colors</p>
+    <p class="text-shadow-moss">UIDF V2: A showcase of neumorphic and glassmorphic UI components with forestry colors</p>
   </div>
 
-  <!-- Color Palette -->
-  <section class="mb-12 glass-panel p-6" in:fade={{ duration: 300, delay: 200 }}>
-    <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Forestry Color Palette</h2>
-    
-    <div class="mb-8">
-      <h3 class="text-lg font-medium mb-4 text-shadow-moss">Primary Colors</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {#each forestryColors as color, i}
-          <div 
-            class="aspect-square rounded-lg flex flex-col items-center justify-center {color.class} {color.text}"
-            in:fly={{ y: 20, delay: i * 50, duration: 300 }}
-          >
-            <span class="font-medium">{color.name}</span>
-            <span class="text-sm mt-1">{color.hex}</span>
-          </div>
-        {/each}
-      </div>
+  <!-- Navigation Tabs -->
+  <div class="neumorph-panel mb-8 p-2" in:fade={{ duration: 300, delay: 150 }}>
+    <div class="flex">
+      <button 
+        class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 text-shadow-moss {activeTab === 'components' ? 'neumorph-pressed' : 'hover:bg-speed-of-light/50'}"
+        on:click={() => activeTab = 'components'}
+      >
+        Components
+      </button>
+      <button 
+        class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 text-shadow-moss {activeTab === 'colors' ? 'neumorph-pressed' : 'hover:bg-speed-of-light/50'}"
+        on:click={() => activeTab = 'colors'}
+      >
+        Colors
+      </button>
+      <button 
+        class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 text-shadow-moss {activeTab === 'typography' ? 'neumorph-pressed' : 'hover:bg-speed-of-light/50'}"
+        on:click={() => activeTab = 'typography'}
+      >
+        Typography
+      </button>
+      <button 
+        class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 text-shadow-moss {activeTab === 'animations' ? 'neumorph-pressed' : 'hover:bg-speed-of-light/50'}"
+        on:click={() => activeTab = 'animations'}
+      >
+        Animations
+      </button>
     </div>
-    
-    <div>
-      <h3 class="text-lg font-medium mb-4 text-shadow-moss">Neutral Colors</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        {#each neutralColors as color, i}
-          <div 
-            class="aspect-square rounded-lg flex flex-col items-center justify-center {color.class} {color.text}"
-            in:fly={{ y: 20, delay: i * 50, duration: 300 }}
-          >
-            <span class="font-medium">{color.name}</span>
-          </div>
-        {/each}
-      </div>
-    </div>
-  </section>
+  </div>
 
-  <!-- Neumorphic Components -->
-  <section class="mb-12" in:fade={{ duration: 300, delay: 300 }}>
-    <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Neumorphic Components</h2>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Panels -->
-      <div class="neumorph-panel p-6">
-        <h3 class="text-lg font-medium mb-4 text-shadow-moss">Panels</h3>
-        
-        <div class="space-y-6">
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Standard Panel</p>
-            <div class="neumorph-panel p-4">
-              <p class="text-shadow-moss">This is a standard neumorphic panel</p>
+  {#if activeTab === 'colors'}
+    <!-- Color Palette -->
+    <section class="mb-12 glass-panel p-6" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Forestry Color Palette</h2>
+      
+      <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-shadow-moss">Primary Colors</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {#each forestryColors as color, i}
+            <div 
+              class="aspect-square rounded-lg flex flex-col items-center justify-center {color.class} {color.text} cursor-pointer transition-all duration-200 hover:scale-105"
+              in:fly={{ y: 20, delay: i * 50, duration: 300 }}
+              on:click={() => selectedColor = color}
+              class:ring-4={selectedColor === color}
+              class:ring-white={selectedColor === color}
+            >
+              <span class="font-medium">{color.name}</span>
+              <span class="text-sm mt-1">{color.hex}</span>
             </div>
-          </div>
-          
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Small Panel</p>
-            <div class="neumorph-panel-sm p-4">
-              <p class="text-shadow-moss">This is a smaller neumorphic panel</p>
-            </div>
-          </div>
-          
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Pressed Panel</p>
-            <div class="neumorph-pressed p-4">
-              <p class="text-shadow-moss">This is a pressed neumorphic panel</p>
-            </div>
-          </div>
+          {/each}
         </div>
       </div>
       
-      <!-- Buttons -->
-      <div class="neumorph-panel p-6">
-        <h3 class="text-lg font-medium mb-4 text-shadow-moss">Buttons</h3>
-        
-        <div class="space-y-6">
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Primary Button</p>
-            <div class="flex gap-4">
-              <Button variant="default">Default</Button>
-              <Button variant="secondary" class="bg-green-tone-ink hover:bg-shadow-moss text-white">Secondary</Button>
+      <div>
+        <h3 class="text-lg font-medium mb-4 text-shadow-moss">Neutral Colors</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {#each neutralColors as color, i}
+            <div 
+              class="aspect-square rounded-lg flex flex-col items-center justify-center {color.class} {color.text}"
+              in:fly={{ y: 20, delay: i * 50, duration: 300 }}
+            >
+              <span class="font-medium">{color.name}</span>
             </div>
-          </div>
-          
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Ghost Button</p>
-            <div class="flex gap-4">
-              <Button variant="ghost" class="text-shadow-moss hover:bg-speed-of-light">Ghost</Button>
-              <Button variant="ghost" class="text-green-tone-ink hover:bg-speed-of-light">Ghost Colored</Button>
-            </div>
-          </div>
-          
-          <div>
-            <p class="text-sm text-shadow-moss mb-2">Neumorphic Button</p>
-            <button class="px-4 py-2 rounded bg-speed-of-light shadow-neumorph hover:shadow-neumorph-sm active:shadow-neumorph-pressed transition-all duration-200 text-shadow-moss">
-              Neumorphic
-            </button>
-          </div>
+          {/each}
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Glassmorphic Components -->
-  <section class="mb-12" in:fade={{ duration: 300, delay: 400 }}>
-    <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Glassmorphic Components</h2>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Glass Panel -->
-      <div class="glass-panel p-6 relative overflow-hidden">
-        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-green-tone-ink/30 blur-xl"></div>
-        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-good-as-gold/30 blur-xl"></div>
-        
-        <h3 class="text-lg font-medium mb-4 text-shadow-moss relative z-10">Glass Panel</h3>
-        <p class="text-shadow-moss relative z-10">
-          This is a glassmorphic panel with a backdrop blur effect. It creates a frosted glass appearance
-          that allows background elements to show through with a blur.
-        </p>
-      </div>
-      
-      <!-- Glass Card -->
-      <div class="glass-panel p-0 overflow-hidden">
-        <div class="p-4 border-b border-white/20">
-          <h3 class="text-lg font-medium text-shadow-moss">Glass Card</h3>
-        </div>
-        <div class="p-6">
-          <p class="text-shadow-moss mb-4">
-            A card component with glassmorphic styling, perfect for overlaying on colorful backgrounds.
-          </p>
-          <button class="px-4 py-2 rounded-full bg-white/70 backdrop-blur-sm shadow-glass hover:bg-white/90 transition-all duration-200 text-shadow-moss">
-            Glass Button
+      <div class="mt-8 p-6 rounded-lg {selectedColor.class} {selectedColor.text} transition-all duration-300">
+        <h3 class="text-xl font-semibold mb-2">Selected Color: {selectedColor.name}</h3>
+        <p>This panel demonstrates how the selected color looks when applied as a background.</p>
+        <div class="mt-4 flex gap-2">
+          <button class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200">
+            Light Button
+          </button>
+          <button class="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-lg hover:bg-black/30 transition-all duration-200">
+            Dark Button
           </button>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  {:else if activeTab === 'typography'}
+    <!-- Typography -->
+    <section class="mb-12 neumorph-panel p-6" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Typography</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <h1 class="text-4xl font-bold forestry-gradient-text">Heading 1 with Gradient</h1>
+          <p class="text-sm text-shadow-moss mt-1">text-4xl font-bold forestry-gradient-text</p>
+        </div>
+        
+        <div>
+          <h1 class="text-4xl font-bold text-shadow-moss">Heading 1</h1>
+          <p class="text-sm text-shadow-moss mt-1">text-4xl font-bold text-shadow-moss</p>
+        </div>
+        
+        <div>
+          <h2 class="text-3xl font-semibold text-shadow-moss">Heading 2</h2>
+          <p class="text-sm text-shadow-moss mt-1">text-3xl font-semibold text-shadow-moss</p>
+        </div>
+        
+        <div>
+          <h3 class="text-2xl font-medium text-shadow-moss">Heading 3</h3>
+          <p class="text-sm text-shadow-moss mt-1">text-2xl font-medium text-shadow-moss</p>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-medium text-shadow-moss">Heading 4</h4>
+          <p class="text-sm text-shadow-moss mt-1">text-xl font-medium text-shadow-moss</p>
+        </div>
+        
+        <div>
+          <p class="text-base text-shadow-moss">Body text in shadow moss color. This is the standard paragraph style used throughout the application.</p>
+          <p class="text-sm text-shadow-moss mt-1">text-base text-shadow-moss</p>
+        </div>
+        
+        <div>
+          <p class="text-sm text-shadow-moss opacity-80">Small text with reduced opacity for secondary information.</p>
+          <p class="text-xs text-shadow-moss mt-1">text-sm text-shadow-moss opacity-80</p>
+        </div>
+      </div>
+    </section>
+  {:else if activeTab === 'animations'}
+    <!-- Animations -->
+    <section class="mb-12" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Animations & Transitions</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Hover & Press States -->
+        <div class="neumorph-panel p-6">
+          <h3 class="text-lg font-medium mb-4 text-shadow-moss">Interactive States</h3>
+          
+          <div class="space-y-6">
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Hover Effect</p>
+              <div 
+                class="neumorph-panel-sm p-4 transition-all duration-200 {hoverState ? 'shadow-neumorph-hover -translate-y-1' : ''}"
+                on:mouseenter={() => hoverState = true}
+                on:mouseleave={() => hoverState = false}
+              >
+                <p class="text-shadow-moss">Hover over me</p>
+              </div>
+            </div>
+            
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Pressed Effect</p>
+              <div 
+                class="neumorph-panel-sm p-4 transition-all duration-200 {pressedState ? 'shadow-neumorph-pressed' : ''}"
+                on:mousedown={() => pressedState = true}
+                on:mouseup={() => pressedState = false}
+                on:mouseleave={() => pressedState = false}
+              >
+                <p class="text-shadow-moss">Press and hold me</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Animation Demo -->
+        <div class="glass-panel p-6 relative overflow-hidden">
+          <h3 class="text-lg font-medium mb-4 text-shadow-moss">Animation Demo</h3>
+          
+          <div class="flex flex-col items-center">
+            <div class="relative w-32 h-32 mb-4">
+              {#if showAnimation}
+                <div 
+                  class="absolute inset-0 bg-green-tone-ink rounded-full"
+                  in:fly={{ y: 50, duration: 500 }}
+                  out:fade={{ duration: 300 }}
+                ></div>
+                <div 
+                  class="absolute inset-4 bg-good-as-gold rounded-full"
+                  in:fly={{ y: 50, duration: 500, delay: 100 }}
+                  out:fade={{ duration: 300, delay: 100 }}
+                ></div>
+                <div 
+                  class="absolute inset-8 bg-walnut-shell rounded-full"
+                  in:fly={{ y: 50, duration: 500, delay: 200 }}
+                  out:fade={{ duration: 300, delay: 200 }}
+                ></div>
+                <div 
+                  class="absolute inset-12 bg-shadow-moss rounded-full"
+                  in:fly={{ y: 50, duration: 500, delay: 300 }}
+                  out:fade={{ duration: 300, delay: 300 }}
+                ></div>
+              {:else}
+                <div class="absolute inset-0 bg-speed-of-light rounded-full shadow-neumorph flex items-center justify-center">
+                  <span class="text-shadow-moss">Click button</span>
+                </div>
+              {/if}
+            </div>
+            
+            <Button on:click={triggerAnimation} class="btn-primary">
+              Trigger Animation
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  {:else}
+    <!-- Neumorphic Components -->
+    <section class="mb-12" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Neumorphic Components</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Panels -->
+        <div class="neumorph-panel p-6">
+          <h3 class="text-lg font-medium mb-4 text-shadow-moss">Panels</h3>
+          
+          <div class="space-y-6">
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Standard Panel</p>
+              <div class="neumorph-panel p-4">
+                <p class="text-shadow-moss">This is a standard neumorphic panel</p>
+              </div>
+            </div>
+            
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Small Panel</p>
+              <div class="neumorph-panel-sm p-4">
+                <p class="text-shadow-moss">This is a smaller neumorphic panel</p>
+              </div>
+            </div>
+            
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Pressed Panel</p>
+              <div class="neumorph-pressed p-4">
+                <p class="text-shadow-moss">This is a pressed neumorphic panel</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Buttons -->
+        <div class="neumorph-panel p-6">
+          <h3 class="text-lg font-medium mb-4 text-shadow-moss">Buttons</h3>
+          
+          <div class="space-y-6">
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Primary Button</p>
+              <div class="flex gap-4">
+                <button class="btn-primary">Primary</button>
+                <button class="btn-secondary">Secondary</button>
+              </div>
+            </div>
+            
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Ghost Button</p>
+              <div class="flex gap-4">
+                <button class="btn-ghost">Ghost</button>
+                <button class="btn-ghost text-green-tone-ink">Ghost Colored</button>
+              </div>
+            </div>
+            
+            <div>
+              <p class="text-sm text-shadow-moss mb-2">Button States</p>
+              <div class="flex gap-4">
+                <button class="btn-primary opacity-50">Disabled</button>
+                <button class="btn-primary shadow-neumorph-pressed">Pressed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- ToitTorus Component -->
-  <section class="mb-12" in:fade={{ duration: 300, delay: 500 }}>
-    <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">ToitTorus Component</h2>
-    
-    <div class="glass-panel p-6">
-      <div class="max-w-2xl mx-auto">
-        <ToitTorus tasks={demoTasks} isPreview={true} />
+    <!-- Glassmorphic Components -->
+    <section class="mb-12" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Glassmorphic Components</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Glass Panel -->
+        <div class="glass-panel p-6 relative overflow-hidden">
+          <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-green-tone-ink/30 blur-xl"></div>
+          <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-good-as-gold/30 blur-xl"></div>
+          
+          <h3 class="text-lg font-medium mb-4 text-shadow-moss relative z-10">Glass Panel</h3>
+          <p class="text-shadow-moss relative z-10">
+            This is a glassmorphic panel with a backdrop blur effect. It creates a frosted glass appearance
+            that allows background elements to show through with a blur.
+          </p>
+        </div>
+        
+        <!-- Glass Form -->
+        <div class="glass-panel p-0 overflow-hidden">
+          <div class="p-4 border-b border-white/20">
+            <h3 class="text-lg font-medium text-shadow-moss">Contact Form</h3>
+          </div>
+          <div class="p-6">
+            {#if formSubmitted}
+              <div class="p-4 bg-green-tone-ink/20 rounded-lg text-shadow-moss mb-4" in:fly={{ y: 20, duration: 300 }}>
+                Thank you for your submission!
+              </div>
+            {/if}
+            <form on:submit|preventDefault={handleFormSubmit} class="space-y-4">
+              <div>
+                <label class="block text-shadow-moss mb-2 text-sm">Name</label>
+                <input type="text" bind:value={demoName} class="input-field" required />
+              </div>
+              <div>
+                <label class="block text-shadow-moss mb-2 text-sm">Email</label>
+                <input type="email" bind:value={demoEmail} class="input-field" required />
+              </div>
+              <div>
+                <label class="block text-shadow-moss mb-2 text-sm">Message</label>
+                <textarea bind:value={demoMessage} rows="3" class="input-field" required></textarea>
+              </div>
+              <button type="submit" class="btn-primary w-full">Submit</button>
+            </form>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Typography -->
-  <section class="mb-12 neumorph-panel p-6" in:fade={{ duration: 300, delay: 600 }}>
-    <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">Typography</h2>
-    
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-4xl font-bold text-shadow-moss">Heading 1</h1>
-        <p class="text-sm text-shadow-moss mt-1">text-4xl font-bold</p>
-      </div>
+    <!-- ToitTorus Component -->
+    <section class="mb-12" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-semibold mb-6 text-shadow-moss">ToitTorus Component</h2>
       
-      <div>
-        <h2 class="text-3xl font-semibold text-shadow-moss">Heading 2</h2>
-        <p class="text-sm text-shadow-moss mt-1">text-3xl font-semibold</p>
+      <div class="glass-panel p-6">
+        <div class="max-w-2xl mx-auto">
+          <ToitTorus tasks={demoTasks} isPreview={true} />
+        </div>
       </div>
-      
-      <div>
-        <h3 class="text-2xl font-medium text-shadow-moss">Heading 3</h3>
-        <p class="text-sm text-shadow-moss mt-1">text-2xl font-medium</p>
-      </div>
-      
-      <div>
-        <h4 class="text-xl font-medium text-shadow-moss">Heading 4</h4>
-        <p class="text-sm text-shadow-moss mt-1">text-xl font-medium</p>
-      </div>
-      
-      <div>
-        <p class="text-base text-shadow-moss">Regular paragraph text</p>
-        <p class="text-sm text-shadow-moss mt-1">text-base</p>
-      </div>
-      
-      <div>
-        <p class="text-sm text-shadow-moss">Small text for secondary information</p>
-        <p class="text-xs text-shadow-moss mt-1">text-sm</p>
-      </div>
-      
-      <div>
-        <p class="forestry-gradient-text text-2xl font-bold">Gradient Text</p>
-        <p class="text-sm text-shadow-moss mt-1">forestry-gradient-text</p>
-      </div>
-    </div>
-  </section>
+    </section>
+  {/if}
+
+  <!-- Footer -->
+  <footer class="text-center text-shadow-moss text-sm mt-12 opacity-70">
+    <p>Toit Design System - UIDF V2 Implementation</p>
+  </footer>
 </div> 

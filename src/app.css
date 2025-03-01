@@ -6,11 +6,25 @@
   body {
     @apply min-h-screen bg-speed-of-light;
   }
+  
+  /* Design System Variables */
+  :root {
+    /* Neumorphism Shadow Values */
+    --shadow-light: 6px 6px 12px rgba(0,0,0,0.08), -6px -6px 12px rgba(255,255,255,0.95);
+    --shadow-medium: 4px 4px 8px rgba(0,0,0,0.08), -4px -4px 8px rgba(255,255,255,0.95);
+    --shadow-inner: inset 2px 2px 5px rgba(0,0,0,0.05), inset -2px -2px 5px rgba(255,255,255,0.8);
+    
+    /* Glassmorphism Values */
+    --glass-background: rgba(255, 255, 255, 0.15);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --glass-blur: 12px;
+  }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-speed-of-light/70 backdrop-blur-md rounded-lg p-6 shadow-glass border border-white/20;
+    @apply bg-speed-of-light/15 backdrop-blur-[12px] rounded-lg p-6 border border-white/20 shadow-glass;
   }
 
   .neumorph-panel {
@@ -26,15 +40,15 @@
   }
 
   .btn-primary {
-    @apply px-4 py-2 bg-white shadow-neumorph-sm hover:shadow-neumorph-pressed text-shadow-moss rounded-lg transition-all;
+    @apply px-4 py-2 bg-white shadow-neumorph-sm hover:shadow-neumorph-pressed active:shadow-neumorph-pressed text-shadow-moss rounded-lg transition-all duration-200;
   }
   
   .btn-secondary {
-    @apply px-4 py-2 bg-green-tone-ink hover:bg-shadow-moss text-white rounded-lg transition-colors;
+    @apply px-4 py-2 bg-green-tone-ink hover:bg-shadow-moss text-white rounded-lg transition-colors duration-200;
   }
 
   .btn-ghost {
-    @apply px-4 py-2 text-shadow-moss hover:bg-speed-of-light rounded-lg transition-colors;
+    @apply px-4 py-2 text-shadow-moss hover:bg-speed-of-light/50 rounded-lg transition-colors duration-200;
   }
 
   .input-field {
@@ -118,5 +132,20 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .transition-all-200 {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .hover-lift {
+    @apply hover:-translate-y-1 transition-transform duration-200;
+  }
+  
+  .hover-shadow {
+    @apply hover:shadow-neumorph transition-shadow duration-200;
   }
 }

@@ -38,12 +38,19 @@ export default {
       },
       backdropBlur: {
         xs: '2px',
+        md: '8px',
+        lg: '12px',
       },
       boxShadow: {
-        'neumorph': '8px 8px 16px rgba(0, 0, 0, 0.05), -8px -8px 16px rgba(255, 255, 255, 0.9)',
-        'neumorph-sm': '4px 4px 10px rgba(0, 0, 0, 0.05), -4px -4px 10px rgba(255, 255, 255, 0.9)',
-        'neumorph-pressed': 'inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -2px -2px 5px rgba(255, 255, 255, 0.5)',
-        'glass': '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
+        // Enhanced neumorphic shadows
+        'neumorph': 'var(--shadow-light)',
+        'neumorph-sm': 'var(--shadow-medium)',
+        'neumorph-pressed': 'var(--shadow-inner)',
+        'glass': 'var(--glass-shadow)',
+        'inner': 'var(--shadow-inner)',
+        // Additional interactive shadows
+        'neumorph-hover': '8px 8px 20px rgba(0, 0, 0, 0.07), -8px -8px 20px rgba(255, 255, 255, 0.95)',
+        'neumorph-active': 'inset 3px 3px 7px rgba(0, 0, 0, 0.07), inset -3px -3px 7px rgba(255, 255, 255, 0.7)',
       },
       backgroundImage: {
         'gradient-forestry': 'linear-gradient(to right bottom, #2C3830, #47553C)',

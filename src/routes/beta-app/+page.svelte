@@ -8,6 +8,7 @@
   import { getMindMaps, createMindMap } from '$lib/supabaseClient';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
+  import { fade, fly } from 'svelte/transition';
 
   export let data;
 
@@ -90,55 +91,40 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-50">
-  <header class="px-4 lg:px-6 h-14 flex items-center bg-white shadow-sm">
-    <a class="flex items-center justify-center" href="/">
-      <img src="/logo.jpg" alt="Toit logo" class="h-10 w-auto mr-2" />
-      <span class="font-bold text-2xl text-gray-800">toit</span>
-    </a>
-    <nav class="ml-auto flex gap-4 sm:gap-6">
-      {#if isAuthenticated}
-        <Button variant="ghost" class="text-gray-600 hover:bg-gray-100">
-          Logout
-        </Button>
-      {:else}
-        <a href="/signup">
-          <Button variant="secondary" class="bg-gray-100 hover:bg-gray-200 text-gray-700">Sign Up</Button>
-        </a>
-        <a href="/login">
-          <Button variant="ghost" class="text-gray-600 hover:bg-gray-100">Login</Button>
-        </a>
-      {/if}
-    </nav>
-  </header>
-
+<div class="min-h-screen bg-speed-of-light">
   <main class="container mx-auto px-4 py-8">
     {#if isLoading}
       <div class="flex justify-center items-center h-[60vh]">
-        <div class="text-gray-600 text-xl">Loading your mind maps...</div>
+        <div class="neumorph-panel p-8 text-center" in:fade>
+          <div class="animate-pulse flex flex-col items-center">
+            <div class="h-12 w-12 rounded-full bg-neugray-200 mb-4"></div>
+            <div class="h-4 w-48 bg-neugray-200 rounded mb-2"></div>
+            <div class="h-3 w-32 bg-neugray-200 rounded"></div>
+          </div>
+        </div>
       </div>
     {:else}
       <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-          <h1 class="text-2xl font-bold text-gray-800">Your Mind Maps</h1>
+        <div class="flex justify-between items-center mb-8" in:fade={{ duration: 300 }}>
+          <h1 class="text-2xl font-bold forestry-gradient-text">Your Mind Maps</h1>
           <Button 
             on:click={() => isCreatingNew = true}
-            class="bg-white shadow-[4px_4px_10px_rgba(0,0,0,0.05),-4px_-4px_10px_rgba(255,255,255,0.9)] hover:shadow-[2px_2px_5px_rgba(0,0,0,0.05),-2px_-2px_5px_rgba(255,255,255,0.9)] text-gray-700"
+            class="btn-primary"
           >
             Create New Map
           </Button>
         </div>
 
         {#if isCreatingNew}
-          <div class="bg-white rounded-lg p-6 mb-8 shadow-[8px_8px_16px_rgba(0,0,0,0.05),-8px_-8px_16px_rgba(255,255,255,0.9)]">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Create New Mind Map</h2>
+          <div class="glass-panel mb-8" in:fade={{ duration: 300 }}>
+            <h2 class="text-xl font-semibold mb-4 text-shadow-moss">Create New Mind Map</h2>
             <form on:submit={handleSubmit} class="space-y-4">
               <div>
                 <textarea
                   bind:value={currentTask}
                   placeholder="Describe your task..."
                   rows="4"
-                  class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent shadow-inner"
+                  class="input-field"
                   disabled={isProcessing}
                 ></textarea>
               </div>
@@ -146,15 +132,15 @@
                 <Button 
                   type="submit" 
                   disabled={isProcessing}
-                  class="flex-1 bg-white shadow-[4px_4px_10px_rgba(0,0,0,0.05),-4px_-4px_10px_rgba(255,255,255,0.9)] hover:shadow-[2px_2px_5px_rgba(0,0,0,0.05),-2px_-2px_5px_rgba(255,255,255,0.9)] text-gray-700"
+                  class="btn-primary flex-1"
                 >
                   {isProcessing ? 'Processing...' : 'Create Mind Map'}
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   type="button" 
                   on:click={() => isCreatingNew = false}
-                  class="border-gray-200 text-gray-600 hover:bg-gray-50"
+                  class="btn-ghost flex-1"
                 >
                   Cancel
                 </Button>
@@ -167,19 +153,20 @@
         {/if}
 
         <div class="grid gap-4">
-          {#each mindMaps as map}
+          {#each mindMaps as map, i}
             <div 
-              class="bg-white p-6 rounded-lg cursor-pointer transition-all duration-200 shadow-[8px_8px_16px_rgba(0,0,0,0.05),-8px_-8px_16px_rgba(255,255,255,0.9)] hover:shadow-[4px_4px_8px_rgba(0,0,0,0.05),-4px_-4px_8px_rgba(255,255,255,0.9)]"
+              class="neumorph-panel cursor-pointer transition-all duration-200 hover:-translate-y-1"
               on:click={() => handleExistingMap(map.mindmap_id)}
+              in:fly={{ y: 20, delay: i * 50, duration: 300 }}
             >
-              <h3 class="text-lg font-semibold text-gray-800">{map.name}</h3>
-              <p class="text-sm text-gray-500">{map.description}</p>
+              <h3 class="text-lg font-semibold text-shadow-moss">{map.name}</h3>
+              <p class="text-sm text-shadow-moss opacity-80">{map.description}</p>
               <div class="flex justify-between items-center mt-4">
-                <span class="text-xs text-gray-400">Created: {new Date(map.created_at).toLocaleDateString()}</span>
+                <span class="text-xs text-shadow-moss opacity-60">Created: {new Date(map.created_at).toLocaleDateString()}</span>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  class="text-gray-600 hover:bg-gray-50"
+                  class="btn-ghost"
                 >
                   Open Map
                 </Button>
@@ -189,11 +176,11 @@
         </div>
 
         {#if mindMaps.length === 0 && !isCreatingNew}
-          <div class="bg-white p-6 rounded-lg text-center shadow-[8px_8px_16px_rgba(0,0,0,0.05),-8px_-8px_16px_rgba(255,255,255,0.9)]">
-            <p class="text-gray-500 mb-4">No mind maps yet. Create your first one!</p>
+          <div class="glass-panel text-center" in:fade={{ duration: 300 }}>
+            <p class="text-shadow-moss mb-4">No mind maps yet. Create your first one!</p>
             <Button 
               on:click={() => isCreatingNew = true}
-              class="bg-white shadow-[4px_4px_10px_rgba(0,0,0,0.05),-4px_-4px_10px_rgba(255,255,255,0.9)] hover:shadow-[2px_2px_5px_rgba(0,0,0,0.05),-2px_-2px_5px_rgba(255,255,255,0.9)] text-gray-700"
+              class="btn-primary"
             >
               Create Mind Map
             </Button>
@@ -202,10 +189,4 @@
       </div>
     {/if}
   </main>
-</div>
-
-<style>
-  :global(body) {
-    @apply bg-gray-50;
-  }
-</style> 
+</div> 
