@@ -5,7 +5,10 @@
   import { user } from '$lib/stores/userStore';
   import { Button } from "$lib/components/ui/button";
   import { page } from '$app/stores';
+  import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
+  import ThemeTransition from '$lib/components/ThemeTransition.svelte';
   import "../app.css";
+  import "$lib/styles/themes.css";
 
   export let data;
 
@@ -55,8 +58,11 @@
   <link rel="icon" href="/logo.jpg" type="image/jpeg">
 </svelte:head>
 
-<div class="min-h-screen bg-speed-of-light flex flex-col">
-  <header class="px-4 lg:px-6 h-16 flex items-center bg-white shadow-sm">
+<!-- Theme transition overlay -->
+<ThemeTransition />
+
+<div class="min-h-screen flex flex-col">
+  <header class="px-4 lg:px-6 h-16 flex items-center bg-background shadow-sm">
     <a 
       class="flex items-center justify-center" 
       href="/"
@@ -70,7 +76,7 @@
         {#if !item.requiresAuth || isAuthenticated}
           <a 
             href={item.href} 
-            class="px-3 py-2 text-shadow-moss hover:text-green-tone-ink transition-colors duration-200 {isActive(item.href) ? 'border-b-2 border-green-tone-ink text-green-tone-ink' : ''}"
+            class="px-3 py-2 text-primary hover:text-secondary transition-colors duration-200 {isActive(item.href) ? 'border-b-2 border-secondary text-secondary' : ''}"
           >
             {item.label}
           </a>
@@ -80,26 +86,26 @@
     
     <div class="ml-auto flex gap-4 sm:gap-6">
       {#if isAuthenticated}
-        <Button variant="ghost" class="text-shadow-moss hover:bg-speed-of-light/50 transition-all duration-200" on:click={handleLogout}>
+        <Button variant="ghost" class="text-primary hover:bg-background/50 transition-all duration-200" on:click={handleLogout}>
           Logout
         </Button>
       {:else}
         <a href="/signup">
-          <Button variant="secondary" class="bg-green-tone-ink hover:bg-shadow-moss text-white transition-all duration-200">Sign Up</Button>
+          <Button variant="secondary" class="bg-secondary hover:bg-primary text-white transition-all duration-200">Sign Up</Button>
         </a>
         <a href="/login">
-          <Button variant="ghost" class="text-shadow-moss hover:bg-speed-of-light/50 transition-all duration-200">Login</Button>
+          <Button variant="ghost" class="text-primary hover:bg-background/50 transition-all duration-200">Login</Button>
         </a>
       {/if}
     </div>
   </header>
 
   <!-- Mobile navigation for smaller screens -->
-  <div class="md:hidden bg-white border-t border-neugray-200 fixed bottom-0 left-0 right-0 z-50">
+  <div class="md:hidden bg-background border-t border-border fixed bottom-0 left-0 right-0 z-50">
     <div class="flex justify-around items-center h-16">
       <a 
         href="/" 
-        class="flex flex-col items-center justify-center p-2 {isActive('/') ? 'text-green-tone-ink' : 'text-shadow-moss'}"
+        class="flex flex-col items-center justify-center p-2 {isActive('/') ? 'text-secondary' : 'text-primary'}"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -111,7 +117,7 @@
         {#each navItems.filter(item => !item.requiresAuth || isAuthenticated) as item}
           <a 
             href={item.href} 
-            class="flex flex-col items-center justify-center p-2 {isActive(item.href) ? 'text-green-tone-ink' : 'text-shadow-moss'}"
+            class="flex flex-col items-center justify-center p-2 {isActive(item.href) ? 'text-secondary' : 'text-primary'}"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {#if item.label === 'Mind Maps'}
@@ -128,7 +134,7 @@
       {:else}
         <a 
           href="/login" 
-          class="flex flex-col items-center justify-center p-2 {isActive('/login') ? 'text-green-tone-ink' : 'text-shadow-moss'}"
+          class="flex flex-col items-center justify-center p-2 {isActive('/login') ? 'text-secondary' : 'text-primary'}"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -137,7 +143,7 @@
         </a>
         <a 
           href="/signup" 
-          class="flex flex-col items-center justify-center p-2 {isActive('/signup') ? 'text-green-tone-ink' : 'text-shadow-moss'}"
+          class="flex flex-col items-center justify-center p-2 {isActive('/signup') ? 'text-secondary' : 'text-primary'}"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -152,17 +158,20 @@
     <slot />
   </main>
 
-  <footer class="py-6 px-4 bg-white border-t border-neugray-200">
+  <footer class="py-6 px-4 bg-background border-t border-border">
     <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
       <div class="flex items-center mb-4 md:mb-0">
         <img src="/logo.jpg" alt="Toit logo" class="h-8 w-auto mr-2" />
-        <span class="text-shadow-moss">© {new Date().getFullYear()} Toit</span>
+        <span class="text-primary">© {new Date().getFullYear()} Toit</span>
       </div>
       <div class="flex gap-6">
-        <a href="/" class="text-shadow-moss hover:text-green-tone-ink transition-colors duration-200">Home</a>
-        <a href="/about" class="text-shadow-moss hover:text-green-tone-ink transition-colors duration-200">About</a>
-        <a href="/privacy" class="text-shadow-moss hover:text-green-tone-ink transition-colors duration-200">Privacy</a>
+        <a href="/" class="text-primary hover:text-secondary transition-colors duration-200">Home</a>
+        <a href="/about" class="text-primary hover:text-secondary transition-colors duration-200">About</a>
+        <a href="/privacy" class="text-primary hover:text-secondary transition-colors duration-200">Privacy</a>
       </div>
     </div>
   </footer>
+
+  <!-- Theme switcher -->
+  <ThemeSwitcher />
 </div>

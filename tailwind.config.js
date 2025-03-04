@@ -16,6 +16,34 @@ export default {
         border: 'hsl(var(--border))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
         // Forestry palette
         'shadow-moss': '#2C3830',
         'speed-of-light': '#F6F4EF',
@@ -57,7 +85,22 @@ export default {
         'gradient-completed': 'linear-gradient(to right bottom, #47553C, #2C3830)',
         'gradient-pending': 'linear-gradient(to right bottom, #D3BA75, #AA8344)',
         'gradient-progress': 'linear-gradient(to right bottom, #AA8344, #D3BA75)',
-      }
+      },
+      borderRadius: {
+        'theme': 'var(--border-radius)',
+      },
+      transitionDuration: {
+        'theme': 'var(--animation-speed)',
+      },
+      spacing: {
+        'theme': 'var(--spacing-factor)',
+      },
+      opacity: {
+        'glass': 'var(--glass-opacity)',
+      },
+      blur: {
+        'glass': 'var(--glass-blur)',
+      },
     },
   },
   plugins: [],

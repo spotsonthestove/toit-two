@@ -1,0 +1,165 @@
+/* Base Theme Variables */
+:root {
+  /* Base Theme (Forestry) */
+  --focus-level: 5;
+  --feeling-level: 5;
+  
+  /* Base Colors */
+  --color-primary: #2C3830; /* shadow-moss */
+  --color-background: #F6F4EF; /* speed-of-light */
+  --color-text: #1B1E1E; /* mariana-black */
+  --color-accent: #AA8344; /* walnut-shell */
+  --color-highlight: #D3BA75; /* good-as-gold */
+  --color-secondary: #47553C; /* green-tone-ink */
+  
+  /* RGB values for transparency */
+  --color-background-rgb: 246, 244, 239;
+  --color-primary-rgb: 44, 56, 48;
+  
+  /* Dynamically calculated values */
+  --shadow-strength: calc(var(--focus-level) * 0.01);
+  --border-radius: calc(max(0.25rem, 0.5rem - (var(--focus-level) * 0.03rem)));
+  --spacing-factor: calc(1 - ((var(--focus-level) - 5) * 0.05));
+  --animation-speed: calc(300ms - ((var(--focus-level) - 5) * 30ms));
+  --color-saturation: calc(100% - ((10 - var(--feeling-level)) * 8%));
+  --decoration-opacity: calc(var(--feeling-level) * 0.1);
+  
+  /* Derived values for components */
+  --shadow-light: 
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 1.2px)
+    rgba(0,0,0,calc(0.08 * var(--shadow-strength))), 
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * 1.2px)
+    rgba(255,255,255,calc(0.95 * var(--shadow-strength)));
+  
+  --shadow-inner: 
+    inset calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(0,0,0,0.1), 
+    inset calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(255,255,255,0.8);
+  
+  /* Glass effect strength */
+  --glass-blur: calc(var(--feeling-level) * 1.2px);
+  --glass-opacity: calc(0.1 + (var(--feeling-level) * 0.01));
+  
+  /* Tailwind theme overrides */
+  --background: 60 33% 96%;
+  --foreground: 180 3% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 180 3% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 180 3% 12%;
+  --primary: 120 15% 20%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 120 15% 27%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 60 33% 96%;
+  --muted-foreground: 180 3% 45%;
+  --accent: 60 33% 96%;
+  --accent-foreground: 180 3% 12%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 180 3% 90%;
+  --input: 180 3% 90%;
+  --ring: 120 15% 20%;
+}
+
+/* Evangelion Theme */
+.theme-evangelion {
+  /* Base colors inspired by Evangelion anime */
+  --color-primary: #6B3E26; /* Eva-01 purple-green */
+  --color-background: #1A1A1A; /* Dark background */
+  --color-background-rgb: 26, 26, 26;
+  --color-text: #F0F0F0; /* Light text */
+  --color-accent: #EC5252; /* NERV red */
+  --color-highlight: #FFC336; /* Warning yellow */
+  --color-secondary: #3D7171; /* Terminal green */
+  
+  /* Adjusted shadows for dark theme */
+  --shadow-light: 
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 1.5px)
+    rgba(0,0,0,0.5), 
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * 1.5px)
+    rgba(60,60,60,0.2);
+  
+  --shadow-inner: 
+    inset calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(0,0,0,0.6), 
+    inset calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(60,60,60,0.3);
+  
+  /* Special Evangelion-specific decorative elements */
+  --eva-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff0000' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  
+  /* Special card styles */
+  --card-border: 1px solid rgba(236, 82, 82, 0.3);
+  --card-header-bg: rgba(236, 82, 82, 0.15);
+  
+  /* Font adjustments */
+  --font-mono: 'Courier New', monospace;
+  
+  /* Tailwind theme overrides */
+  --background: 0 0% 10%;
+  --foreground: 0 0% 94%;
+  --card: 0 0% 12%;
+  --card-foreground: 0 0% 94%;
+  --popover: 0 0% 12%;
+  --popover-foreground: 0 0% 94%;
+  --primary: 0 73% 57%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 187 73% 32%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 66%;
+  --accent: 0 0% 15%;
+  --accent-foreground: 0 0% 94%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 94%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 0 73% 57%;
+}
+
+/* Theme transition overlay */
+.theme-transition-overlay {
+  background-color: var(--color-background);
+  opacity: 0.5;
+  animation: theme-transition 1s ease-in-out forwards;
+}
+
+@keyframes theme-transition {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Terminal-like text animation for Evangelion theme */
+@keyframes eva-terminal-blink {
+  0%, 100% { border-color: rgba(236, 82, 82, 0.7); }
+  50% { border-color: transparent; }
+}
+
+.theme-evangelion .terminal-text::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: #EC5252;
+  margin-left: 3px;
+  animation: eva-terminal-blink 1s infinite;
+} 
