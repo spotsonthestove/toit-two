@@ -836,4 +836,44 @@ Fixed beta-map route and improved integration with beta-app:
 
 The beta-map route now properly loads and displays mind maps, with smooth navigation between the beta-app and beta-map routes. These improvements provide a solid foundation for further enhancements to the mind map visualization and interaction.
 
+### 2024-05-16 (Update 2)
+
+Fixed Cloudflare Workers deployment configuration for branch-based development:
+
+1. **Wrangler Configuration Updates**:
+   - Resolved environment variable inheritance issues in wrangler.toml
+   - Properly configured development environment with:
+     - Correct name for branch deployment
+     - Environment-specific variables
+     - AI binding configuration
+   - Removed redundant top-level configurations
+
+2. **Key Changes**:
+   ```toml
+   [env.development]
+   name = "toit-two-theming"
+   vars = { 
+       ENVIRONMENT = "development",
+       PUBLIC_SUPABASE_URL = "...",
+       PUBLIC_SUPABASE_ANON_KEY = "..."
+   }
+
+   [env.development.ai]
+   binding = "AI"
+   ```
+
+3. **Deployment Process**:
+   - Successfully configured branch-specific deployments
+   - Removed conflicting `--name` and `--env` flags
+   - Proper environment variable inheritance
+   - Maintained AI functionality in development environment
+
+4. **Next Steps**:
+   - Test branch deployment with theme changes
+   - Monitor AI functionality in development environment
+   - Consider adding environment-specific logging
+   - Document deployment process for team reference
+
+Note: The configuration now properly supports branch-based development while maintaining all required functionality, including AI features and environment variables.
+
 
