@@ -8,11 +8,6 @@ assets = { directory = ".svelte-kit/cloudflare", binding = "ASSETS" }
 [env.development]
 vars = { ENVIRONMENT = "development" }
 
-# Specify Node.js version
-[build]
-command = "npm install"
-node_version = "18"
-
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
 # Configuration: https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs
