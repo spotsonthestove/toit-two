@@ -6,7 +6,12 @@ assets = { directory = ".svelte-kit/cloudflare", binding = "ASSETS" }
 
 # Development/staging environment 
 [env.development]
-vars = { ENVIRONMENT = "development" }
+name = "toit-two-theming"
+vars = { ENVIRONMENT = "development", PUBLIC_SUPABASE_URL = "https://bfshmuuhkxhihwrkedtu.supabase.co", PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmc2htdXVoa3hoaWh3cmtlZHR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODAzMjQ2ODcsImV4cCI6MTk5NTkwMDY4N30.yL58wz-kqOLdIXTU-zK3R1MwmOEo2v8bcIfvFfDg-tQ" }
+
+# Add AI binding to development environment
+[env.development.ai]
+binding = "AI"
 
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
