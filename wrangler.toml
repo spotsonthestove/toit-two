@@ -8,13 +8,18 @@ assets = { directory = ".svelte-kit/cloudflare", binding = "ASSETS" }
 [env.development]
 vars = { ENVIRONMENT = "development" }
 
+# Specify Node.js version
+[build]
+command = "npm install"
+node_version = "18"
+
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
 # Configuration: https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs
 [observability]
 enabled = true
 
-# Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
+# Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare's global network
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#workers-ai
 [ai]
 binding = "AI"
