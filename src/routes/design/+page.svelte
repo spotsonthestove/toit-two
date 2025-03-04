@@ -110,7 +110,7 @@
 </script>
 
 <svelte:head>
-  <title>Toit Design System</title>
+  <title>Toit Design System - let's do knobs :-)</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
