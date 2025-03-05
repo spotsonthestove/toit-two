@@ -270,21 +270,81 @@
             points.push(point);
         }
 
-        const branchGeometry = new THREE.TubeGeometry(
-            new THREE.CatmullRomCurve3(points),
-            20,
-            0.05,
-            8,
-            false
-        );
+        // Create a custom curve for the branch
+        const curve = new THREE.CatmullRomCurve3(points);
+        
+        // Create a tapered tube geometry - wider at start, narrower at end
+        const radiusSegments = 8;
+        const tubularSegments = 64;
+        
+        // Custom geometry for tapered tube
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const indices = [];
+        
+        // Generate vertices for the tube with varying radius
+        for (let i = 0; i <= tubularSegments; i++) {
+            const u = i / tubularSegments;
+            const point = curve.getPoint(u);
+            
+            // Calculate radius that tapers from start to end (0.08 to 0.03)
+            const radius = 0.08 - (u * 0.05);
+            
+            // Create circle at this point
+            for (let j = 0; j < radiusSegments; j++) {
+                const v = j / radiusSegments;
+                const theta = v * Math.PI * 2;
+                
+                // Calculate normal vector for the tube
+                const normal = new THREE.Vector3();
+                if (i < tubularSegments) {
+                    const pointAhead = curve.getPoint((i + 1) / tubularSegments);
+                    normal.subVectors(pointAhead, point).normalize();
+                } else {
+                    const pointBehind = curve.getPoint((i - 1) / tubularSegments);
+                    normal.subVectors(point, pointBehind).normalize();
+                }
+                
+                // Calculate binormal and tangent
+                const binormal = new THREE.Vector3(0, 1, 0).cross(normal).normalize();
+                const tangent = normal.clone().cross(binormal).normalize();
+                
+                // Calculate position of vertex
+                const cx = point.x + radius * Math.cos(theta) * binormal.x + radius * Math.sin(theta) * tangent.x;
+                const cy = point.y + radius * Math.cos(theta) * binormal.y + radius * Math.sin(theta) * tangent.y;
+                const cz = point.z + radius * Math.cos(theta) * binormal.z + radius * Math.sin(theta) * tangent.z;
+                
+                vertices.push(cx, cy, cz);
+            }
+        }
+        
+        // Generate indices for the tube
+        for (let i = 0; i < tubularSegments; i++) {
+            for (let j = 0; j < radiusSegments; j++) {
+                const a = i * radiusSegments + j;
+                const b = i * radiusSegments + ((j + 1) % radiusSegments);
+                const c = (i + 1) * radiusSegments + ((j + 1) % radiusSegments);
+                const d = (i + 1) * radiusSegments + j;
+                
+                // Add two triangles for each quad
+                indices.push(a, b, d);
+                indices.push(b, c, d);
+            }
+        }
+        
+        // Set attributes for the geometry
+        geometry.setIndex(indices);
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
 
         const branchMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xff0000,
             transparent: true,
-            opacity: 0.7
+            opacity: 0.7,
+            shininess: 30
         });
 
-        const branch = new THREE.Mesh(branchGeometry, branchMaterial);
+        const branch = new THREE.Mesh(geometry, branchMaterial);
         branchGroup.add(branch);
 
         // Create text with dark color and transparent background
@@ -296,19 +356,19 @@
         if (context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Add text with dark color
-            context.font = 'bold 48px Arial';
+            // Add text with dark color - increased font size
+            context.font = 'bold 56px Arial';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
             
             const text = endNode.userData.title || '';
             // Add text outline in lighter color for contrast
-            context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            context.lineWidth = 4;
+            context.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            context.lineWidth = 5;
             context.strokeText(text, canvas.width / 2, canvas.height / 2);
             
             // Add text fill in dark color
-            context.fillStyle = '#333333';
+            context.fillStyle = '#222222';
             context.fillText(text, canvas.width / 2, canvas.height / 2);
         }
         
@@ -323,7 +383,8 @@
             alphaTest: 0.1
         });
 
-        const textGeometry = new THREE.PlaneGeometry(2, 0.5);
+        // Increased text size
+        const textGeometry = new THREE.PlaneGeometry(2.5, 0.6);
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
         // Calculate direction for orientation
@@ -334,9 +395,9 @@
         const right = new THREE.Vector3().crossVectors(direction, up).normalize();
         const textUp = new THREE.Vector3().crossVectors(right, direction).normalize();
         
-        // Position text at midpoint relative to branch
+        // Position text at midpoint relative to branch but with more offset
         const localMidpoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
-        localMidpoint.y += 0.3; // Reduced offset
+        localMidpoint.y += 0.6; // Increased offset to move text further from branch
         textMesh.position.copy(localMidpoint);
         
         // Orient text to align with branch direction
@@ -374,16 +435,76 @@
                 points.push(point);
             }
 
-            const newGeometry = new THREE.TubeGeometry(
-                new THREE.CatmullRomCurve3(points),
-                20,
-                0.05,
-                8,
-                false
-            );
+            // Create a custom curve for the branch
+            const curve = new THREE.CatmullRomCurve3(points);
+            
+            // Create a tapered tube geometry - wider at start, narrower at end
+            const radiusSegments = 8;
+            const tubularSegments = 64;
+            
+            // Custom geometry for tapered tube
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            
+            // Generate vertices for the tube with varying radius
+            for (let i = 0; i <= tubularSegments; i++) {
+                const u = i / tubularSegments;
+                const point = curve.getPoint(u);
+                
+                // Calculate radius that tapers from start to end (0.08 to 0.03)
+                const radius = 0.08 - (u * 0.05);
+                
+                // Create circle at this point
+                for (let j = 0; j < radiusSegments; j++) {
+                    const v = j / radiusSegments;
+                    const theta = v * Math.PI * 2;
+                    
+                    // Calculate normal vector for the tube
+                    const normal = new THREE.Vector3();
+                    if (i < tubularSegments) {
+                        const pointAhead = curve.getPoint((i + 1) / tubularSegments);
+                        normal.subVectors(pointAhead, point).normalize();
+                    } else {
+                        const pointBehind = curve.getPoint((i - 1) / tubularSegments);
+                        normal.subVectors(point, pointBehind).normalize();
+                    }
+                    
+                    // Calculate binormal and tangent
+                    const binormal = new THREE.Vector3(0, 1, 0).cross(normal).normalize();
+                    const tangent = normal.clone().cross(binormal).normalize();
+                    
+                    // Calculate position of vertex
+                    const cx = point.x + radius * Math.cos(theta) * binormal.x + radius * Math.sin(theta) * tangent.x;
+                    const cy = point.y + radius * Math.cos(theta) * binormal.y + radius * Math.sin(theta) * tangent.y;
+                    const cz = point.z + radius * Math.cos(theta) * binormal.z + radius * Math.sin(theta) * tangent.z;
+                    
+                    vertices.push(cx, cy, cz);
+                }
+            }
+            
+            // Generate indices for the tube
+            for (let i = 0; i < tubularSegments; i++) {
+                for (let j = 0; j < radiusSegments; j++) {
+                    const a = i * radiusSegments + j;
+                    const b = i * radiusSegments + ((j + 1) % radiusSegments);
+                    const c = (i + 1) * radiusSegments + ((j + 1) % radiusSegments);
+                    const d = (i + 1) * radiusSegments + j;
+                    
+                    // Add two triangles for each quad
+                    indices.push(a, b, d);
+                    indices.push(b, c, d);
+                }
+            }
+            
+            // Set attributes for the geometry
+            geometry.setIndex(indices);
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.computeVertexNormals();
 
+            // Dispose of old geometry and update with new one
             branch.geometry.dispose();
-            branch.geometry = newGeometry;
+            branch.geometry = geometry;
 
             // Update text content with dark color
             const canvas = document.createElement('canvas');
@@ -394,19 +515,19 @@
             if (context) {
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Add text with dark color
-                context.font = 'bold 48px Arial';
+                // Add text with dark color - increased font size
+                context.font = 'bold 56px Arial';
                 context.textAlign = 'center';
                 context.textBaseline = 'middle';
                 
                 const text = endNode.userData.title || '';
                 // Add text outline in lighter color for contrast
-                context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                context.lineWidth = 4;
+                context.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                context.lineWidth = 5;
                 context.strokeText(text, canvas.width / 2, canvas.height / 2);
                 
                 // Add text fill in dark color
-                context.fillStyle = '#333333';
+                context.fillStyle = '#222222';
                 context.fillText(text, canvas.width / 2, canvas.height / 2);
             }
             
@@ -425,9 +546,9 @@
             const right = new THREE.Vector3().crossVectors(direction, up).normalize();
             const textUp = new THREE.Vector3().crossVectors(right, direction).normalize();
             
-            // Position text at midpoint relative to branch
+            // Position text at midpoint relative to branch but with more offset
             const localMidpoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
-            localMidpoint.y += 0.3; // Reduced offset
+            localMidpoint.y += 0.6; // Increased offset to move text further from branch
             textMesh.position.copy(localMidpoint);
             
             // Orient text to align with branch direction
@@ -521,14 +642,24 @@
             if (branch) {
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                canvas.width = 256;
-                canvas.height = 64;
+                canvas.width = 512;
+                canvas.height = 128;
 
                 if (context) {
-                    context.font = '24px Arial';
-                    context.fillStyle = 'white';
+                    // Increased font size for better visibility
+                    context.font = 'bold 56px Arial';
                     context.textAlign = 'center';
-                    context.fillText(nodeData.title || '', canvas.width / 2, canvas.height / 2);
+                    context.textBaseline = 'middle';
+                    
+                    const text = nodeData.title || '';
+                    // Add text outline in lighter color for contrast
+                    context.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    context.lineWidth = 5;
+                    context.strokeText(text, canvas.width / 2, canvas.height / 2);
+                    
+                    // Add text fill in dark color
+                    context.fillStyle = '#222222';
+                    context.fillText(text, canvas.width / 2, canvas.height / 2);
                 }
 
                 const texture = new THREE.CanvasTexture(canvas);
