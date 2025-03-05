@@ -15,7 +15,9 @@
   import * as THREE from 'three';
   import type { MindMapNode, NodeType } from '$lib/types/mindmap';
 
-  interface Node {
+  // This interface is causing conflicts with DOM Node type
+  // Rename to MapNode to avoid conflicts
+  interface MapNode {
     id: number;
     title: string;
     description: string;
@@ -173,7 +175,7 @@
             const result = await createMindMap(
                 newMapName,
                 newMapDescription || 'Description',
-                initialNodes
+                initialNodes as any
             );
 
             mindMaps = [...mindMaps, {
@@ -186,7 +188,7 @@
             selectedMindMapId = result.mindmap_id;
             isCreatingNew = false;
 
-            const mappedNodes = result.nodes.map(node => ({
+            const mappedNodes = result.nodes.map((node: any) => ({
                 id: node.node_id,
                 label: node.title,
                 title: node.title,
@@ -224,7 +226,7 @@
                 selectedMindMapId!,
                 newMapName,
                 newMapDescription,
-                formattedNodes
+                formattedNodes as any
             );
             
             mindMaps = mindMaps.map(map => 
@@ -412,23 +414,23 @@
 
 {#if isLoading}
   <div class="flex justify-center items-center h-screen">
-    <div class="text-white text-xl">Loading...</div>
+    <div class="text-foreground text-xl">Loading...</div>
   </div>
 {:else if pageError}
   <div class="text-center p-8 bg-red-100 rounded-lg max-w-md mx-auto">
     <h1 class="text-red-600 mb-4">Error</h1>
-    <p class="text-white mb-4">{pageError.message}</p>
+    <p class="text-foreground mb-4">{pageError.message}</p>
     <a href="/login?redirectTo=/maps" class="btn-primary">Return to Login</a>
   </div>
 {:else if !isAuthenticated}
   <div class="text-center p-8 bg-gray-100 rounded-lg max-w-md mx-auto">
-    <p class="text-white mb-4">Please log in to access this page</p>
+    <p class="text-foreground mb-4">Please log in to access this page</p>
     <a href="/login?redirectTo=/maps" class="btn-primary">Log In</a>
   </div>
 {:else}
   <div class="container mx-auto px-4">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl text-white">Toit Mind Map</h1>
+      <h1 class="text-4xl text-foreground">Toit Mind Map</h1>
       <div class="flex gap-4">
         <button
           on:click={handleNewMap}
@@ -460,7 +462,7 @@
           class="space-y-4"
         >
           <div>
-            <label for="map_name" class="block text-white mb-2">
+            <label for="map_name" class="block text-foreground mb-2">
               {isCreatingNew ? 'New Mind Map Name' : 'Mind Map Name'}
             </label>
             <input
@@ -473,7 +475,7 @@
             >
           </div>
           <div>
-            <label for="map_description" class="block text-white mb-2">Description</label>
+            <label for="map_description" class="block text-foreground mb-2">Description</label>
             <textarea 
               id="map_description" 
               bind:value={newMapDescription}
@@ -512,7 +514,7 @@
           
           {#if selectedNodeId !== null && selectedNodePosition !== null}
             <div class="glass-panel p-4">
-              <h3 class="text-white mb-4">Edit Node</h3>
+              <h3 class="text-foreground mb-4">Edit Node</h3>
               <NodeDataForm
                 nodeId={selectedNodeId}
                 position={selectedNodePosition}
@@ -553,24 +555,12 @@
   </div>
 {/if}
 
-<style>
-  .glass-panel {
-    @apply bg-gray-800 bg-opacity-50 backdrop-blur-lg border border-gray-700 rounded-lg p-6;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500;
-  }
-
-  .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800;
-  }
-
+<style global>
+  /* These styles are causing conflicts with the global theme */
+  /* Instead of custom styles, we'll use the global theme classes */
+  
+  /* Ensure we don't override any global theme styles */
   :global(body) {
-    @apply bg-gray-900;
+    /* Remove any background overrides */
   }
 </style>

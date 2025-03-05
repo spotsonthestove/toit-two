@@ -1,44 +1,57 @@
 <!-- src/lib/components/ThemeTransition.svelte -->
 <script lang="ts">
-  import { themeName } from '$lib/stores/themeStore';
   import { fade } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { currentTheme } from '$lib/stores/themeStore';
+  import { isTransitioning } from '$lib/utils/themeTransitionManager';
   
-  let transitioning = false;
-  let previousTheme = $themeName;
+  // Track previous theme for display
+  let previousTheme = '';
   
-  // Watch for theme changes
-  $: if ($themeName !== previousTheme && !transitioning) {
-    startTransition();
-    previousTheme = $themeName;
-  }
-  
-  function startTransition() {
-    transitioning = true;
-    // Reset after animation completes
-    setTimeout(() => {
-      transitioning = false;
-    }, 1000); // Match this to the CSS transition duration
+  // Update previous theme when current theme changes
+  $: if (!$isTransitioning && $currentTheme !== previousTheme) {
+    previousTheme = $currentTheme;
   }
 </script>
 
-{#if transitioning}
-  <div 
-    class="fixed inset-0 z-[9999] pointer-events-none theme-transition-overlay"
-    transition:fade={{ duration: 1000 }}
-  ></div>
+{#if $isTransitioning}
+  <div
+    class="theme-transition-overlay"
+    transition:fade={{ duration: 300 }}
+  >
+    <div class="theme-transition-content">
+      <span class="theme-transition-text">Switching to {$currentTheme} theme...</span>
+    </div>
+  </div>
 {/if}
 
 <style>
   .theme-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: var(--color-background);
-    opacity: 0.5;
-    animation: theme-transition 1s ease-in-out forwards;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0.7;
   }
   
-  @keyframes theme-transition {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
+  .theme-transition-content {
+    text-align: center;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    background-color: rgba(var(--color-background-rgb), 0.8);
+    box-shadow: 0 0 20px rgba(var(--color-accent-rgb, 0, 0, 0), 0.3);
+    backdrop-filter: blur(5px);
+  }
+  
+  .theme-transition-text {
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    font-size: 1.25rem;
   }
 </style> 

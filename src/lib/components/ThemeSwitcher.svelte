@@ -3,120 +3,146 @@
   import { fly, fade } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { 
-    themeName, 
+    currentTheme, 
     focusLevel, 
     feelingLevel, 
     THEMES, 
     PRESETS,
-    applyPreset,
-    type Theme,
-    type Preset
+    applyPreset
   } from '$lib/stores/themeStore';
+  import { debounce } from '$lib/utils/themeTransitionManager';
   
   // Local state
   let showThemePanel = false;
   
-  // Handle theme change with animation
-  function changeTheme(newTheme: Theme) {
-    // Use a transition delay to allow for animation
-    setTimeout(() => {
-      themeName.set(newTheme);
-    }, 300);
+  // Debounced focus/feeling updates
+  const debouncedFocusUpdate = debounce((value: number) => {
+    focusLevel.set(value);
+  }, 100);
+  
+  const debouncedFeelingUpdate = debounce((value: number) => {
+    feelingLevel.set(value);
+  }, 100);
+  
+  // Local values for sliders (to prevent jank during debounce)
+  let localFocus = $focusLevel;
+  let localFeeling = $feelingLevel;
+  
+  // Update local values when store values change
+  $: localFocus = $focusLevel;
+  $: localFeeling = $feelingLevel;
+  
+  // Handle focus change with debounce
+  function handleFocusChange(event: Event) {
+    const value = parseInt((event.target as HTMLInputElement).value);
+    localFocus = value;
+    debouncedFocusUpdate(value);
   }
-
+  
+  // Handle feeling change with debounce
+  function handleFeelingChange(event: Event) {
+    const value = parseInt((event.target as HTMLInputElement).value);
+    localFeeling = value;
+    debouncedFeelingUpdate(value);
+  }
+  
   // Handle preset application
-  function handlePreset(key: string) {
-    applyPreset(key as Preset);
+  function handlePresetClick(key: string) {
+    if (key in PRESETS) {
+      applyPreset(key as keyof typeof PRESETS);
+    }
   }
 </script>
 
 <div class="fixed bottom-4 right-4 z-50">
-  <!-- Theme toggle button -->
-  <button 
-    class="neumorph-panel-sm p-3 rounded-full transition-all duration-300 hover:scale-110"
+  <button
+    class="theme-toggle-button"
     on:click={() => showThemePanel = !showThemePanel}
     aria-label="Toggle theme settings"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   </button>
   
-  <!-- Theme panel -->
   {#if showThemePanel}
-    <div 
-      class="glass-panel w-80 absolute bottom-16 right-0 p-4 rounded-lg"
-      transition:fly={{ y: 20, duration: 300, easing: cubicOut }}
+    <div
+      class="theme-panel glass-panel"
+      in:fly={{ y: 20, duration: 150, easing: cubicOut }}
+      out:fade={{ duration: 150 }}
     >
-      <h3 class="text-lg font-medium mb-4">Theme Settings</h3>
-      
-      <!-- Theme selector -->
-      <div class="mb-6">
-        <label class="block text-sm mb-2">Theme</label>
-        <div class="flex gap-2">
-          <button 
-            class="flex-1 p-3 rounded-lg transition-all duration-300 {$themeName === THEMES.FORESTRY ? 'neumorph-pressed' : 'neumorph-panel-sm'}"
-            on:click={() => changeTheme(THEMES.FORESTRY)}
-          >
-            Forestry
-          </button>
-          <button 
-            class="flex-1 p-3 rounded-lg transition-all duration-300 {$themeName === THEMES.EVANGELION ? 'neumorph-pressed' : 'neumorph-panel-sm'}"
-            on:click={() => changeTheme(THEMES.EVANGELION)}
-          >
-            Evangelion
-          </button>
+      <div class="theme-controls">
+        <!-- Focus Control -->
+        <div class="control-group">
+          <div class="flex justify-between mb-1">
+            <label for="focus-slider" class="text-sm" data-monospace="true">Focus: {localFocus}</label>
+            <span class="text-sm opacity-70">
+              {localFocus <= 3 ? 'Relaxed' : localFocus >= 8 ? 'Intense' : 'Balanced'}
+            </span>
+          </div>
+          <input 
+            id="focus-slider"
+            type="range" 
+            min="1" 
+            max="10" 
+            step="1"
+            value={localFocus}
+            on:input={handleFocusChange}
+            class="w-full accent-primary"
+          />
         </div>
-      </div>
-      
-      <!-- Focus control -->
-      <div class="mb-4">
-        <div class="flex justify-between mb-1">
-          <label class="text-sm">Focus: {$focusLevel}</label>
-          <span class="text-sm opacity-70">
-            {$focusLevel <= 3 ? 'Relaxed' : $focusLevel >= 8 ? 'Intense' : 'Balanced'}
-          </span>
+        
+        <!-- Feeling Control -->
+        <div class="control-group">
+          <div class="flex justify-between mb-1">
+            <label for="feeling-slider" class="text-sm" data-monospace="true">Feeling: {localFeeling}</label>
+            <span class="text-sm opacity-70">
+              {localFeeling <= 3 ? 'Utilitarian' : localFeeling >= 8 ? 'Playful' : 'Balanced'}
+            </span>
+          </div>
+          <input 
+            id="feeling-slider"
+            type="range" 
+            min="1" 
+            max="10" 
+            step="1"
+            value={localFeeling}
+            on:input={handleFeelingChange}
+            class="w-full accent-primary"
+          />
         </div>
-        <input 
-          type="range" 
-          min="1" 
-          max="10" 
-          step="1"
-          bind:value={$focusLevel}
-          class="w-full accent-primary"
-        />
-      </div>
-      
-      <!-- Feeling control -->
-      <div class="mb-4">
-        <div class="flex justify-between mb-1">
-          <label class="text-sm">Feeling: {$feelingLevel}</label>
-          <span class="text-sm opacity-70">
-            {$feelingLevel <= 3 ? 'Utilitarian' : $feelingLevel >= 8 ? 'Playful' : 'Balanced'}
-          </span>
-        </div>
-        <input 
-          type="range" 
-          min="1" 
-          max="10" 
-          step="1"
-          bind:value={$feelingLevel}
-          class="w-full accent-primary"
-        />
-      </div>
-      
-      <!-- Presets -->
-      <div class="mt-6">
-        <label class="block text-sm mb-2">Presets</label>
-        <div class="grid grid-cols-3 gap-2">
-          {#each Object.entries(PRESETS) as [key, preset]}
+        
+        <!-- Presets -->
+        <div class="presets">
+          <label class="block text-sm mb-2" data-monospace="true">Presets</label>
+          <div class="grid grid-cols-3 gap-2">
             <button 
-              class="p-2 text-xs rounded-lg neumorph-panel-sm hover:neumorph-pressed transition-all duration-200"
-              on:click={() => handlePreset(key)}
+              class="preset-button"
+              on:click={() => handlePresetClick('MINIMALIST')}
             >
-              {preset.name}
+              Minimalist
             </button>
-          {/each}
+            <button 
+              class="preset-button"
+              on:click={() => handlePresetClick('BALANCED')}
+            >
+              Balanced
+            </button>
+            <button 
+              class="preset-button"
+              on:click={() => handlePresetClick('CREATIVE')}
+            >
+              Creative
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -124,60 +150,60 @@
 </div>
 
 <style>
-  .glass-panel {
-    background-color: rgba(var(--color-background-rgb), var(--glass-opacity));
-    backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .neumorph-panel-sm {
+  .theme-toggle-button {
     background-color: var(--color-background);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--animation-speed) ease;
     box-shadow: var(--shadow-light);
   }
   
-  .neumorph-pressed {
+  .theme-toggle-button:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-light);
+  }
+  
+  .theme-panel {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: 300px;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+  }
+  
+  .theme-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .control-group {
+    margin-bottom: 1rem;
+  }
+  
+  .presets {
+    margin-top: 1rem;
+  }
+  
+  .preset-button {
     background-color: var(--color-background);
-    box-shadow: var(--shadow-inner);
-  }
-  
-  input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--color-background);
-    outline: none;
-    box-shadow: var(--shadow-inner);
-  }
-  
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-primary);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    font-size: 0.875rem;
     cursor: pointer;
-    box-shadow: var(--shadow-light);
-    transition: all 0.2s ease;
+    transition: all var(--animation-speed) ease;
   }
   
-  input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-  }
-  
-  input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    cursor: pointer;
-    box-shadow: var(--shadow-light);
-    border: none;
-    transition: all 0.2s ease;
-  }
-  
-  input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.1);
+  .preset-button:hover {
+    background-color: rgba(var(--color-accent-rgb), 0.1);
+    border-color: var(--color-accent);
   }
 </style> 

@@ -1,0 +1,139 @@
+/* Theme-Switchable Components */
+
+/* Card Component */
+.card {
+  background-color: rgba(var(--color-background-rgb), 0.8);
+  border: var(--card-border, 1px solid rgba(var(--color-primary-rgb), 0.1));
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--border-radius);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+.card-header {
+  background: var(--card-header-bg, rgba(var(--color-primary-rgb), 0.05));
+  border-bottom: var(--card-border, 1px solid rgba(var(--color-primary-rgb), 0.1));
+  padding: 1rem;
+}
+
+/* Form elements */
+input, select, textarea {
+  border: var(--input-border, 1px solid rgba(var(--color-primary-rgb), 0.2));
+  background: rgba(var(--color-background-rgb), 0.6);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.2);
+  outline: none;
+}
+
+/* Buttons */
+.button {
+  border: var(--button-border, 1px solid rgba(var(--color-primary-rgb), 0.3));
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--border-radius);
+  transition: all var(--animation-speed) ease-in-out;
+  background-color: rgba(var(--color-background-rgb), 0.8);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-accent-rgb), 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.button:hover::before {
+  left: 100%;
+}
+
+.button:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(var(--color-background-rgb), 0.9);
+}
+
+/* Navigation */
+nav {
+  border-bottom: var(--card-border, 1px solid rgba(var(--color-primary-rgb), 0.1));
+}
+
+.nav-link {
+  position: relative;
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Glass Panel */
+.glass-panel {
+  background-color: rgba(var(--color-background-rgb), var(--glass-opacity));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  border-radius: var(--border-radius);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+/* Neumorphic Panel */
+.neumorph-panel {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+.neumorph-panel-sm {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+.neumorph-pressed {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-inner);
+  transition: all var(--animation-speed) ease-in-out;
+}
+
+/* Theme Transition Overlay */
+.theme-transition-overlay {
+  background-color: var(--color-background);
+  opacity: 0.5;
+  animation: theme-transition 1s ease-in-out forwards;
+}
+
+@keyframes theme-transition {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+} 

@@ -1,0 +1,423 @@
+/* Evangelion Theme - Inspired by Neon Genesis Evangelion UI */
+.theme-evangelion {
+  /* Base colors - using the exact colors from the example UI */
+  --color-background: #000000;
+  --color-background-rgb: 0, 0, 0;
+  --color-text: #FFFFFF;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary: #FF4800; /* NERV orange-red */
+  --color-primary-rgb: 255, 72, 0;
+  --color-secondary: #00FFFF; /* Terminal cyan */
+  --color-secondary-rgb: 0, 255, 255;
+  --color-accent: #EC5252; /* Warning red */
+  --color-accent-rgb: 236, 82, 82;
+  --color-border: #333333;
+  --color-border-rgb: 51, 51, 51;
+  
+  /* Typography */
+  --font-sans: 'Courier New', monospace; /* Override sans with monospace */
+  --font-mono: 'Courier New', monospace;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+  --letter-spacing-wide: 0.05em;
+  
+  /* Terminal-like text animations */
+  --terminal-blink-speed: 1s;
+  --terminal-scan-speed: 10s;
+  
+  /* Component styling */
+  --card-border: 1px solid var(--color-border);
+  --card-bg: rgba(20, 20, 20, 0.7);
+  --card-shadow: 0 0 15px rgba(236, 82, 82, 0.2);
+  
+  /* Layout */
+  --container-padding: 1.5rem;
+  --grid-gap: 1.5rem;
+  --section-spacing: 2rem;
+  
+  /* Animation timings */
+  --animation-speed: 0.3s;
+  --transition-speed: 0.2s;
+  
+  /* Decorative elements */
+  --scanline-size: 4px;
+  --grid-line-color: rgba(50, 50, 50, 0.5);
+  
+  /* Tailwind theme overrides */
+  --background: var(--color-background);
+  --foreground: var(--color-text);
+  --card: var(--card-bg);
+  --card-foreground: var(--color-text);
+  --popover: var(--card-bg);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-text);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-background);
+  --muted: rgba(51, 51, 51, 0.8);
+  --muted-foreground: rgba(255, 255, 255, 0.7);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-text);
+  --destructive: #ff0000;
+  --destructive-foreground: var(--color-text);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
+  --radius: 0.25rem;
+  
+  /* CRT scanline effect */
+  position: relative;
+}
+
+/* CRT scanline effect */
+.theme-evangelion::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% var(--scanline-size);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Subtle CRT flicker */
+.theme-evangelion::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0);
+  z-index: 110;
+  pointer-events: none;
+  animation: flicker 5s infinite;
+}
+
+@keyframes flicker {
+  0% { background-color: rgba(0,0,0,0); }
+  5% { background-color: rgba(0,0,0,0.02); }
+  10% { background-color: rgba(0,0,0,0); }
+  15% { background-color: rgba(0,0,0,0.04); }
+  30% { background-color: rgba(0,0,0,0); }
+  50% { background-color: rgba(0,0,0,0.03); }
+  80% { background-color: rgba(0,0,0,0); }
+  95% { background-color: rgba(0,0,0,0.05); }
+  100% { background-color: rgba(0,0,0,0); }
+}
+
+/* Typography */
+.theme-evangelion h1, 
+.theme-evangelion h2, 
+.theme-evangelion h3, 
+.theme-evangelion h4, 
+.theme-evangelion h5, 
+.theme-evangelion h6 {
+  font-family: var(--font-mono);
+  color: var(--color-primary);
+  letter-spacing: var(--letter-spacing-wide);
+  margin-bottom: 1rem;
+}
+
+.theme-evangelion p,
+.theme-evangelion li,
+.theme-evangelion span,
+.theme-evangelion div {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+/* Card components */
+.theme-evangelion .card {
+  background-color: var(--card-bg);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+
+.theme-evangelion .card-header {
+  border-bottom: var(--card-border);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  color: var(--color-primary);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Form elements */
+.theme-evangelion input,
+.theme-evangelion select,
+.theme-evangelion textarea {
+  font-family: var(--font-mono);
+  background-color: rgba(var(--color-background-rgb), 0.8);
+  border: 1px solid var(--color-border);
+  color: var(--color-secondary);
+  padding: 0.5rem;
+}
+
+.theme-evangelion input:focus,
+.theme-evangelion select:focus,
+.theme-evangelion textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.3);
+}
+
+/* Buttons */
+.theme-evangelion .button {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--animation-speed) ease;
+}
+
+.theme-evangelion .button:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+/* Navigation */
+.theme-evangelion nav {
+  border-bottom: var(--card-border);
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.theme-evangelion .nav-link {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-evangelion .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--transition-speed) ease;
+}
+
+.theme-evangelion .nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Glass panels */
+.theme-evangelion .glass-panel {
+  background-color: rgba(20, 20, 20, 0.7);
+  border: var(--card-border);
+  box-shadow: 0 0 15px rgba(236, 82, 82, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+/* Status indicators */
+.theme-evangelion .status {
+  color: var(--color-secondary);
+  font-size: 0.9rem;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Terminal-like elements */
+.theme-evangelion .terminal {
+  font-family: var(--font-mono);
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: var(--card-border);
+  padding: 1rem;
+  height: 200px;
+  overflow: auto;
+}
+
+.theme-evangelion .terminal-line {
+  margin-bottom: 0.25rem;
+}
+
+.theme-evangelion .terminal-prompt {
+  color: var(--color-primary);
+  margin-right: 0.5rem;
+}
+
+/* Grid lines for layout */
+.theme-evangelion .grid-container {
+  position: relative;
+}
+
+.theme-evangelion .grid-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-color) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: -1;
+  opacity: 0.2;
+}
+
+/* Warning elements */
+.theme-evangelion .warning {
+  color: var(--color-accent);
+  font-weight: bold;
+  animation: warning-blink 1s infinite;
+}
+
+@keyframes warning-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Status bars */
+.theme-evangelion .status-bar {
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-border);
+  margin: 10px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-evangelion .status-fill {
+  height: 100%;
+  background-color: var(--color-secondary);
+  position: relative;
+  animation: pulse 4s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; width: 75%; }
+  50% { opacity: 0.8; width: 77%; }
+}
+
+/* Hexagon grid elements */
+.theme-evangelion .hexagon {
+  width: 30px;
+  height: 35px;
+  background-color: transparent;
+  position: relative;
+  border: 1px solid var(--color-secondary);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: all 0.3s ease;
+}
+
+.theme-evangelion .hexagon.active {
+  background-color: rgba(0, 255, 255, 0.3);
+}
+
+/* Layout adjustments */
+.theme-evangelion .container {
+  padding: var(--container-padding);
+}
+
+.theme-evangelion .grid {
+  gap: var(--grid-gap);
+}
+
+.theme-evangelion section {
+  margin-bottom: var(--section-spacing);
+}
+
+/* Focus/Feeling adjustments */
+.theme-evangelion[data-focus="high"] {
+  --container-padding: 1rem;
+  --grid-gap: 1rem;
+  --section-spacing: 1.5rem;
+}
+
+.theme-evangelion[data-feeling="low"] {
+  --animation-speed: 0.2s;
+  --terminal-blink-speed: 0.8s;
+}
+
+.theme-evangelion[data-feeling="high"] {
+  --animation-speed: 0.5s;
+  --terminal-blink-speed: 1.5s;
+}
+
+/* Scrollbars */
+.theme-evangelion ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-evangelion ::-webkit-scrollbar-track {
+  background: #111;
+}
+
+.theme-evangelion ::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+}
+
+/* Command line interface elements */
+.theme-evangelion .command-line {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: var(--card-border);
+  padding: 0.5rem;
+}
+
+.theme-evangelion .command-prompt {
+  color: var(--color-primary);
+  margin-right: 10px;
+}
+
+.theme-evangelion .command-input {
+  background-color: transparent;
+  border: none;
+  color: var(--color-secondary);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+}
+
+/* Data display elements */
+.theme-evangelion .data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 8px;
+  margin-bottom: 15px;
+}
+
+.theme-evangelion .data-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.theme-evangelion .data-label {
+  color: #AAAAAA;
+  font-size: 0.8rem;
+}
+
+.theme-evangelion .data-value {
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+} 

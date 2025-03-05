@@ -1,0 +1,85 @@
+/* Base Theme Variables */
+:root {
+  /* Base Theme (Forestry) */
+  --focus-level: 5;
+  --feeling-level: 5;
+  
+  /* Base Colors */
+  --color-primary: #2C3830; /* shadow-moss */
+  --color-background: #F6F4EF; /* speed-of-light */
+  --color-text: #1B1E1E; /* mariana-black */
+  --color-accent: #AA8344; /* walnut-shell */
+  --color-highlight: #D3BA75; /* good-as-gold */
+  --color-secondary: #47553C; /* green-tone-ink */
+  
+  /* RGB values for transparency */
+  --color-background-rgb: 246, 244, 239;
+  --color-primary-rgb: 44, 56, 48;
+  --color-accent-rgb: 170, 131, 68;
+  
+  /* Typography System */
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+  --letter-spacing-wide: 0.05em;
+  
+  /* Component Spacing */
+  --container-padding: calc(2rem * var(--spacing-factor));
+  --grid-gap: calc(1.5rem * var(--spacing-factor));
+  --section-spacing: calc(3rem * var(--spacing-factor));
+  
+  /* Dynamically calculated values */
+  --shadow-strength: calc(var(--focus-level) * 0.01);
+  --border-radius: calc(max(0.25rem, 0.5rem - (var(--focus-level) * 0.03rem)));
+  --spacing-factor: calc(1 - ((var(--focus-level) - 5) * 0.05));
+  --animation-speed: calc(300ms - ((var(--focus-level) - 5) * 30ms));
+  --color-saturation: calc(100% - ((10 - var(--feeling-level)) * 8%));
+  --decoration-opacity: calc(var(--feeling-level) * 0.1);
+  
+  /* Derived values for components */
+  --shadow-light: 
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 0.6px)
+    calc(var(--focus-level) * 1.2px)
+    rgba(0,0,0,calc(0.08 * var(--shadow-strength))), 
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * -0.6px)
+    calc(var(--focus-level) * 1.2px)
+    rgba(255,255,255,calc(0.95 * var(--shadow-strength)));
+  
+  --shadow-inner: 
+    inset calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(0,0,0,0.1), 
+    inset calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * -0.2px)
+    calc(var(--focus-level) * 0.5px)
+    rgba(255,255,255,0.8);
+  
+  /* Glass effect strength */
+  --glass-blur: calc(var(--feeling-level) * 1.2px);
+  --glass-opacity: calc(0.1 + (var(--feeling-level) * 0.01));
+  
+  /* Tailwind theme overrides */
+  --background: 60 33% 96%;
+  --foreground: 180 3% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 180 3% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 180 3% 12%;
+  --primary: 120 15% 20%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 120 15% 27%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 60 33% 96%;
+  --muted-foreground: 180 3% 45%;
+  --accent: 60 33% 96%;
+  --accent-foreground: 180 3% 12%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 180 3% 90%;
+  --input: 180 3% 90%;
+  --ring: 120 15% 20%;
+} 
