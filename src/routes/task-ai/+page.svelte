@@ -117,142 +117,87 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
+        padding: 1rem;
     }
 
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 2rem;
-        background: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 1rem;
     }
 
-    .logo {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    nav {
-        display: flex;
-        gap: 1rem;
-    }
-
-    nav a {
-        text-decoration: none;
-        color: #495057;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-    }
-
-    nav a.active {
-        background: #e9ecef;
-    }
-
-    .split-view {
+    .main {
         display: flex;
         flex: 1;
+        gap: 1rem;
         overflow: hidden;
     }
 
-    .task-panel {
-        width: 400px;
-        border-right: 1px solid #e9ecef;
+    .sidebar {
+        width: 300px;
         display: flex;
         flex-direction: column;
-        padding: 1rem;
-    }
-
-    .task-input {
-        margin-bottom: 2rem;
-    }
-
-    textarea {
-        width: 100%;
-        padding: 0.5rem;
-        margin: 0.5rem 0;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        resize: vertical;
-    }
-
-    textarea:disabled {
-        background: #e9ecef;
-        cursor: not-allowed;
-    }
-
-    button {
-        width: 100%;
-        padding: 0.5rem;
-        background: #228be6;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    button:disabled {
-        background: #74c0fc;
-        cursor: not-allowed;
-    }
-
-    button:hover:not(:disabled) {
-        background: #1c7ed6;
-    }
-
-    .error-message {
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-        color: #e03131;
-        background: #fff5f5;
-        border: 1px solid #ffc9c9;
-        border-radius: 4px;
     }
 
     .task-list {
         flex: 1;
         overflow-y: auto;
+        padding-right: 0.5rem;
     }
 
     .task-item {
-        padding: 1rem;
-        border: 1px solid #e9ecef;
-        border-radius: 4px;
+        padding: 0.5rem;
         margin-bottom: 0.5rem;
+        border-radius: 4px;
+        background-color: var(--card);
+        border: 1px solid var(--border);
         cursor: pointer;
-        position: relative;
     }
 
     .task-item:hover {
-        background: #f8f9fa;
+        background-color: var(--accent);
     }
 
     .task-item.selected {
-        border-color: #228be6;
-        background: #e7f5ff;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
     }
 
-    .ai-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        font-size: 0.75rem;
+    .task-form {
+        margin-top: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background-color: var(--background);
+        color: var(--foreground);
+    }
+
+    .btn {
         padding: 0.25rem 0.5rem;
-        background: #228be6;
-        color: white;
+        background-color: var(--primary);
+        color: var(--primary-foreground);
         border-radius: 4px;
     }
 
     .mindmap-panel {
         flex: 1;
-        background: #f8f9fa;
+        background-color: var(--background);
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
     .empty-state {
-        color: #868e96;
+        color: var(--muted-foreground);
         text-align: center;
     }
 </style> 

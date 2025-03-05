@@ -226,7 +226,8 @@
 </div>
 
 <style>
-  :global(body) {
+  /* Removing this override to allow the global theme to work properly */
+  /* :global(body) {
     @apply bg-gray-50;
-  }
+  } */
 </style>

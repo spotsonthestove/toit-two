@@ -108,9 +108,10 @@
 </div>
 
 <style>
-  .glass {
+  /* Use the glass-panel class from the global styles instead of custom implementation */
+  /* .glass {
     background-color: rgba(var(--color-background-rgb), var(--glass-opacity));
     backdrop-filter: blur(var(--glass-blur));
     border: 1px solid rgba(var(--color-accent-rgb), 0.3);
-  }
+  } */
 </style> 
