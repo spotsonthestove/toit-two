@@ -670,6 +670,143 @@
             }
         }
     }
+
+    // Force-directed layout implementation
+    export function applyForceDirectedLayout() {
+        if (!scene || threeNodes.length === 0) return;
+        
+        // Find center node
+        const centerNode = threeNodes.find(node => node.userData.isCenter);
+        if (!centerNode) return;
+        
+        // Set center node at origin
+        centerNode.position.set(0, 0, 0);
+        
+        // Create simulation objects for each node
+        const nodeSimulations = threeNodes.map(node => ({
+            node,
+            velocity: new THREE.Vector3(0, 0, 0),
+            force: new THREE.Vector3(0, 0, 0)
+        }));
+        
+        // Parameters for the simulation
+        const repulsionStrength = 5;  // Strength of repulsion between nodes
+        const attractionStrength = 0.2;  // Strength of attraction between connected nodes
+        const centerAttractionStrength = 0.05;  // Strength of attraction to center
+        const damping = 0.8;  // Damping factor to prevent oscillation
+        const iterations = 100;  // Number of simulation iterations
+        
+        // Run simulation
+        for (let i = 0; i < iterations; i++) {
+            // Reset forces
+            nodeSimulations.forEach(sim => {
+                sim.force.set(0, 0, 0);
+            });
+            
+            // Apply repulsion forces between all nodes
+            for (let j = 0; j < nodeSimulations.length; j++) {
+                for (let k = j + 1; k < nodeSimulations.length; k++) {
+                    const nodeA = nodeSimulations[j];
+                    const nodeB = nodeSimulations[k];
+                    
+                    const direction = new THREE.Vector3().subVectors(
+                        nodeB.node.position,
+                        nodeA.node.position
+                    );
+                    
+                    const distance = direction.length();
+                    
+                    // Avoid division by zero
+                    if (distance === 0) continue;
+                    
+                    // Normalize direction
+                    direction.normalize();
+                    
+                    // Calculate repulsion force (inverse square law)
+                    const repulsionForce = repulsionStrength / (distance * distance);
+                    
+                    // Apply repulsion in opposite directions
+                    nodeA.force.sub(direction.clone().multiplyScalar(repulsionForce));
+                    nodeB.force.add(direction.clone().multiplyScalar(repulsionForce));
+                }
+            }
+            
+            // Apply attraction forces between connected nodes
+            branches.forEach(({ startNode, endNode }) => {
+                const startSim = nodeSimulations.find(sim => sim.node === startNode);
+                const endSim = nodeSimulations.find(sim => sim.node === endNode);
+                
+                if (!startSim || !endSim) return;
+                
+                const direction = new THREE.Vector3().subVectors(
+                    endSim.node.position,
+                    startSim.node.position
+                );
+                
+                const distance = direction.length();
+                
+                // Normalize direction
+                direction.normalize();
+                
+                // Calculate attraction force (linear with distance)
+                const attractionForce = attractionStrength * distance;
+                
+                // Apply attraction in opposite directions
+                startSim.force.add(direction.clone().multiplyScalar(attractionForce));
+                endSim.force.sub(direction.clone().multiplyScalar(attractionForce));
+            });
+            
+            // Apply center attraction for non-center nodes
+            nodeSimulations.forEach(sim => {
+                if (sim.node !== centerNode) {
+                    const direction = new THREE.Vector3().subVectors(
+                        centerNode.position,
+                        sim.node.position
+                    );
+                    
+                    const distance = direction.length();
+                    
+                    // Normalize direction
+                    direction.normalize();
+                    
+                    // Calculate center attraction force (linear with distance)
+                    const centerAttractionForce = centerAttractionStrength * distance;
+                    
+                    // Apply center attraction
+                    sim.force.add(direction.clone().multiplyScalar(centerAttractionForce));
+                }
+            });
+            
+            // Update velocities and positions
+            nodeSimulations.forEach(sim => {
+                // Skip center node
+                if (sim.node === centerNode) return;
+                
+                // Update velocity with force and damping
+                sim.velocity.add(sim.force);
+                sim.velocity.multiplyScalar(damping);
+                
+                // Update position
+                sim.node.position.add(sim.velocity);
+            });
+        }
+        
+        // Update branches and node positions in store
+        updateBranches();
+        updateNodePositions();
+    }
+
+    // Layout selection function
+    export function applyLayout(layoutType: string) {
+        switch(layoutType) {
+            case 'force':
+                applyForceDirectedLayout();
+                break;
+            // Other layout types can be added here
+            default:
+                console.warn('Unknown layout type:', layoutType);
+        }
+    }
 </script>
 
 <div bind:this={container}></div>
