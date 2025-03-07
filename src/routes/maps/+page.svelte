@@ -512,6 +512,17 @@
         <div class="flex flex-col gap-4">
           <button on:click={handleAddNode} class="btn-secondary">Add Node</button>
           
+          <!-- Add layout controls -->
+          <div class="glass-panel p-4">
+            <h3 class="text-foreground mb-4">Layout Options</h3>
+            <button on:click={() => mindMapComponent?.applyLayout('force')} class="btn-secondary w-full mb-2">
+              Apply Force Layout
+            </button>
+            <p class="text-sm text-muted-foreground">
+              Note: This will rearrange nodes but their positions will be saved to the database when you save the mind map.
+            </p>
+          </div>
+          
           {#if selectedNodeId !== null && selectedNodePosition !== null}
             <div class="glass-panel p-4">
               <h3 class="text-foreground mb-4">Edit Node</h3>
