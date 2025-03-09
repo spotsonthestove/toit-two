@@ -466,3 +466,227 @@ Benefits:
 - Cleaner component code without error handling logic
 
 These architectural patterns should be implemented across the application to improve code organization, maintainability, and user experience while leveraging SvelteKit's powerful features.
+
+## 9. Theme-Driven Component Architecture
+
+To create a more adaptable UI that responds to theme changes, focus levels, and feeling levels, we need a component architecture that's both reusable and highly customizable. This section outlines our approach to building theme-driven components.
+
+### 9.1 Component Adaptation Strategy
+
+Our components need to adapt to multiple dimensions of customization:
+
+1. **Theme Identity**: Visual style specific to themes like Evangelion or Forestry
+2. **Focus Level**: Information density and UI complexity (1-10 scale)
+3. **Feeling Level**: Visual richness and playfulness (1-10 scale)
+
+To achieve this, we'll implement a layered approach:
+
+```
+Base Component Layer
+↓
+Theme-Specific Styling Layer
+↓
+Focus/Feeling Adjustments Layer
+↓
+Instance-Specific Customizations
+```
+
+### 9.2 Implementation Approaches
+
+#### Option 1: Enhanced Shadcn/Svelte (Recommended)
+
+We can continue using Shadcn/Svelte components but enhance them with theme-aware wrappers:
+
+```svelte
+<!-- Enhanced Button Component -->
+<script lang="ts">
+  import { Button as ShadcnButton } from "$lib/components/ui/button";
+  import { currentTheme, focusLevel, feelingLevel } from '$lib/stores/themeStore';
+  
+  export let variant = "default";
+  export let size = "default";
+  export let {...props} = {};
+  
+  // Derive theme-specific classes
+  $: themeClasses = getThemeClasses($currentTheme, variant, $focusLevel, $feelingLevel);
+</script>
+
+<ShadcnButton
+  variant={variant}
+  size={size}
+  class={themeClasses}
+  {...props}
+>
+  <slot />
+</ShadcnButton>
+```
+
+This approach leverages existing components while adding theme-specific styling.
+
+#### Option 2: Custom Component Library
+
+Build components from scratch with theme adaptation as a core principle:
+
+```svelte
+<!-- Custom Button Component -->
+<script lang="ts">
+  import { currentTheme, focusLevel, feelingLevel } from '$lib/stores/themeStore';
+  
+  export let variant = "default";
+  export let size = "default";
+  export let disabled = false;
+  
+  // Compute component properties based on theme, focus, and feeling
+  $: baseClasses = getBaseClasses(variant, size);
+  $: themeClasses = getThemeClasses($currentTheme, variant);
+  $: focusClasses = getFocusClasses($focusLevel);
+  $: feelingClasses = getFeelingClasses($feelingLevel);
+</script>
+
+<button
+  class={`${baseClasses} ${themeClasses} ${focusClasses} ${feelingClasses}`}
+  disabled={disabled}
+>
+  <slot />
+</button>
+```
+
+This approach offers maximum flexibility but requires more development effort.
+
+#### Option 3: CSS Variable-Based Approach
+
+Use CSS variables extensively to control component appearance:
+
+```css
+/* Base component styles */
+.btn {
+  padding: var(--btn-padding);
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  transition: var(--animation-speed) ease;
+}
+
+/* Theme-specific variables */
+.theme-evangelion {
+  --btn-padding: 0.75rem 1.5rem;
+  --btn-radius: 0;
+  --btn-font-size: 0.875rem;
+  --btn-bg: rgba(236, 82, 82, 0.9);
+  --btn-color: #ffffff;
+}
+
+.theme-forestry {
+  --btn-padding: 0.5rem 1rem;
+  --btn-radius: 0.375rem;
+  --btn-font-size: 1rem;
+  --btn-bg: var(--color-walnut-shell);
+  --btn-color: var(--color-speed-of-light);
+}
+
+/* Focus/feeling adjustments */
+[data-focus="high"] {
+  --btn-padding: 0.5rem 1rem;
+  --btn-font-size: 0.75rem;
+}
+
+[data-feeling="high"] {
+  --btn-radius: 1rem;
+  --btn-bg: linear-gradient(45deg, var(--color-primary), var(--color-accent));
+}
+```
+
+This approach is efficient but may be less flexible for complex component variations.
+
+### 9.3 Component Theme Registry
+
+To systematically manage component variations across themes, we'll create a component theme registry:
+
+```typescript
+// src/lib/theme/componentRegistry.ts
+import type { ComponentTheme } from '$lib/types';
+
+export const buttonThemes: Record<string, ComponentTheme> = {
+  [THEMES.EVANGELION]: {
+    base: 'font-mono uppercase tracking-wider border-0',
+    variants: {
+      primary: 'bg-red-500 text-white hover:bg-red-600',
+      secondary: 'bg-gray-800 text-white hover:bg-gray-700',
+      ghost: 'bg-transparent text-red-500 hover:bg-red-500/10'
+    },
+    focusAdjustments: {
+      high: 'text-xs py-1 px-3',
+      medium: 'text-sm py-2 px-4',
+      low: 'text-base py-3 px-6'
+    },
+    feelingAdjustments: {
+      high: 'animate-pulse border border-red-500/50',
+      medium: 'transition-all duration-300',
+      low: 'transition-none'
+    }
+  },
+  [THEMES.FORESTRY]: {
+    base: 'font-sans rounded-md border border-walnut-shell/20',
+    variants: {
+      primary: 'bg-walnut-shell text-speed-of-light hover:bg-walnut-shell/90',
+      secondary: 'bg-green-tone-ink text-speed-of-light hover:bg-green-tone-ink/90',
+      ghost: 'bg-transparent text-shadow-moss hover:bg-shadow-moss/10'
+    },
+    focusAdjustments: {
+      high: 'text-sm py-1.5 px-3',
+      medium: 'text-base py-2 px-4',
+      low: 'text-lg py-3 px-6'
+    },
+    feelingAdjustments: {
+      high: 'shadow-lg transform transition hover:-translate-y-1',
+      medium: 'shadow transition-all duration-300',
+      low: 'shadow-sm transition-none'
+    }
+  }
+};
+
+// Similar registries for other components
+```
+
+### 9.4 Component Library Structure
+
+Our component library will be organized as follows:
+
+```
+src/lib/components/
+├── ui/                 # Base components (from shadcn or custom)
+│   ├── button.ts
+│   ├── card.ts
+│   └── ...
+├── themed/             # Theme-aware component wrappers
+│   ├── Button.svelte
+│   ├── Card.svelte
+│   └── ...
+└── composite/          # Higher-order components
+    ├── ThemeCard.svelte
+    ├── TaskItem.svelte
+    └── ...
+```
+
+### 9.5 Implementation Plan
+
+#### Phase 1: Component Theme Registry
+1. Define theme-specific styles for core components
+2. Create focus/feeling adjustment mappings
+3. Build utility functions for class generation
+
+#### Phase 2: Theme-Aware Component Wrappers
+1. Create wrapper components for all UI elements
+2. Implement theme, focus, and feeling reactivity
+3. Ensure proper slot and prop forwarding
+
+#### Phase 3: Component Showcase & Documentation
+1. Create a comprehensive component showcase
+2. Document theme-specific variations
+3. Provide usage examples with different themes/focus/feeling levels
+
+#### Phase 4: Migration & Refinement
+1. Replace direct UI component usage with themed wrappers
+2. Refine component behavior based on testing
+3. Optimize performance for theme switching

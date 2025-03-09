@@ -23,7 +23,7 @@ function applyRadialLayout() {
 }
 ```
 
-#### Force-Directed Layout
+#### Force-Directed Layout (✅ Implemented)
 - Uses physics simulation for natural node positioning
 - Implements forces of attraction between connected nodes
 - Applies repulsion between all nodes to prevent overlap
@@ -37,41 +37,16 @@ function applyForceDirectedLayout() {
   // Apply center attraction for non-center nodes
   // Run simulation for fixed iterations
 }
-// ... existing code ...
-
-export function applySpiralLayout() {
-    if (!scene || threeNodes.length === 0) return;
-    
-    // Find center node
-    const centerNode = threeNodes.find(node => node.userData.isCenter);
-    if (!centerNode) return;
-    
-    // Set center node at origin
-    centerNode.position.set(0, 0, 0);
-    
-    // Get all non-center nodes
-    const nonCenterNodes = threeNodes.filter(node => !node.userData.isCenter);
-    
-    // Parameters for the spiral
-    const a = 0.5;  // Controls how tightly wound the spiral is
-    const b = 0.2;  // Controls the vertical rise
-    
-    // Position nodes along a spiral
-    nonCenterNodes.forEach((node, index) => {
-        const angle = index * 0.5;  // Angle increment
-        const radius = a * angle;   // Increasing radius
-        
-        node.position.x = radius * Math.cos(angle);
-        node.position.z = radius * Math.sin(angle);
-        node.position.y = b * angle;  // Gradual rise
-    });
-    
-    // Update branches and node positions in store
-    updateBranches();
-    updateNodePositions();
-}
-// ... existing code ...
 ```
+
+**Implementation Status:** Complete. The force-directed layout has been successfully implemented with three key forces (repulsion, attraction, and center attraction). The implementation includes proper database integration to save node positions and UI controls for applying the layout.
+
+**Key Insights:**
+- Force parameters require careful tuning for optimal results
+- Damping is essential for stable layouts
+- Fixed center node provides better stability
+- Existing branch update mechanism handles layout changes well
+- Performance considerations for larger mind maps should be addressed in future iterations
 
 #### Tree Layout
 - Arranges nodes in a traditional hierarchical tree
@@ -86,112 +61,6 @@ function applyTreeLayout(horizontal = false) {
   // Adjust spacing to prevent overlap
   // Update branches and node positions
 }
-// ... existing code ...
-
-export function applyTreeLayout(horizontal = false) {
-    if (!scene || threeNodes.length === 0) return;
-    
-    // Find center node
-    const centerNode = threeNodes.find(node => node.userData.isCenter);
-    if (!centerNode) return;
-    
-    // Set center node position
-    centerNode.position.set(0, 0, 0);
-    
-    // Build tree structure
-    const tree = buildTreeStructure(centerNode.userData.id);
-    
-    // Calculate node positions
-    if (horizontal) {
-        positionNodesHorizontally(tree, 0, 0, 3, 2);
-    } else {
-        positionNodesVertically(tree, 0, 0, 3, 2);
-    }
-    
-    // Update branches and node positions in store
-    updateBranches();
-    updateNodePositions();
-}
-
-// Helper function to build tree structure
-function buildTreeStructure(rootId) {
-    const nodeMap = new Map();
-    
-    // Create a map of nodes by ID
-    threeNodes.forEach(node => {
-        nodeMap.set(node.userData.id, {
-            node,
-            children: []
-        });
-    });
-    
-    // Build parent-child relationships
-    threeNodes.forEach(node => {
-        if (node.userData.parentId !== null && nodeMap.has(node.userData.parentId)) {
-            const parent = nodeMap.get(node.userData.parentId);
-            parent.children.push(nodeMap.get(node.userData.id));
-        }
-    });
-    
-    return nodeMap.get(rootId);
-}
-
-// Position nodes in a vertical tree layout
-function positionNodesVertically(treeNode, x, z, xSpacing, zLevel) {
-    if (!treeNode) return { width: 0 };
-    
-    const { node, children } = treeNode;
-    
-    // Position children recursively
-    let totalWidth = 0;
-    let childrenWidths = [];
-    
-    children.forEach(child => {
-        const result = positionNodesVertically(child, x + totalWidth, z + zLevel, xSpacing, zLevel);
-        totalWidth += result.width;
-        childrenWidths.push(result.width);
-    });
-    
-    // If no children, set a minimum width
-    if (children.length === 0) {
-        totalWidth = xSpacing;
-    }
-    
-    // Center the node above its children
-    const nodeX = x + totalWidth / 2 - xSpacing / 2;
-    node.position.set(nodeX, 0, z);
-    
-    return { width: totalWidth };
-}
-
-// Position nodes in a horizontal tree layout
-function positionNodesHorizontally(treeNode, x, z, xLevel, zSpacing) {
-    if (!treeNode) return { height: 0 };
-    
-    const { node, children } = treeNode;
-    
-    // Position children recursively
-    let totalHeight = 0;
-    let childrenHeights = [];
-    
-    children.forEach(child => {
-        const result = positionNodesHorizontally(child, x + xLevel, z + totalHeight, xLevel, zSpacing);
-        totalHeight += result.height;
-        childrenHeights.push(result.height);
-    });
-    
-    // If no children, set a minimum height
-    if (children.length === 0) {
-        totalHeight = zSpacing;
-    }
-    
-    // Center the node to the left of its children
-    const nodeZ = z + totalHeight / 2 - zSpacing / 2;
-    node.position.set(x, 0, nodeZ);
-    
-    return { height: totalHeight };
-}
-// ... existing code ...
 ```
 
 #### Spiral Layout
@@ -207,49 +76,13 @@ function applySpiralLayout() {
   // Control spiral tightness and vertical rise
   // Update branches and node positions
 }
-// ... existing code ...
-
-export function applySpiralLayout() {
-    if (!scene || threeNodes.length === 0) return;
-    
-    // Find center node
-    const centerNode = threeNodes.find(node => node.userData.isCenter);
-    if (!centerNode) return;
-    
-    // Set center node at origin
-    centerNode.position.set(0, 0, 0);
-    
-    // Get all non-center nodes
-    const nonCenterNodes = threeNodes.filter(node => !node.userData.isCenter);
-    
-    // Parameters for the spiral
-    const a = 0.5;  // Controls how tightly wound the spiral is
-    const b = 0.2;  // Controls the vertical rise
-    
-    // Position nodes along a spiral
-    nonCenterNodes.forEach((node, index) => {
-        const angle = index * 0.5;  // Angle increment
-        const radius = a * angle;   // Increasing radius
-        
-        node.position.x = radius * Math.cos(angle);
-        node.position.z = radius * Math.sin(angle);
-        node.position.y = b * angle;  // Gradual rise
-    });
-    
-    // Update branches and node positions in store
-    updateBranches();
-    updateNodePositions();
-}
-// ... existing code ...
 ```
 
 ### 1.2 User Interface Integration
 
 Provide a control panel for users to select and apply different layouts:
 
-```
-// ... existing code ...
-
+```typescript
 // Add these functions to your component
 export function applyLayout(layoutType) {
     switch(layoutType) {
@@ -272,52 +105,20 @@ export function applyLayout(layoutType) {
             console.warn('Unknown layout type:', layoutType);
     }
 }
-// ... existing code ...
-svelte
-<div class="layout-controls glass-panel">
-  <h3>Layout Options</h3>
-  <button on:click={() => applyLayout('radial')}>Radial Layout</button>
-  <button on:click={() => applyLayout('force')}>Force-Directed Layout</button>
-  <button on:click={() => applyLayout('tree-vertical')}>Vertical Tree</button>
-  <button on:click={() => applyLayout('tree-horizontal')}>Horizontal Tree</button>
-  <button on:click={() => applyLayout('spiral')}>Spiral Layout</button>
-</div>
+```
 
-<div class="layout-controls">
-    <button on:click={() => applyLayout('radial')}>Radial Layout</button>
-    <button on:click={() => applyLayout('force')}>Force-Directed Layout</button>
-    <button on:click={() => applyLayout('tree-vertical')}>Vertical Tree</button>
-    <button on:click={() => applyLayout('tree-horizontal')}>Horizontal Tree</button>
-    <button on:click={() => applyLayout('spiral')}>Spiral Layout</button>
-</div>
+**Implementation Status:** Partially complete. The layout selection function has been implemented, but currently only supports the force-directed layout. The UI integration includes a "Layout Options" panel with an "Apply Force Layout" button. Additional layout options will be added as they are implemented.
 
-<style>
-    .layout-controls {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 10px;
-        border-radius: 5px;
-    }
-    
-    button {
-        padding: 8px 12px;
-        border: none;
-        background: #4CAF50;
-        color: white;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    
-    button:hover {
-        background: #388E3C;
-    }
-</style>
+```svelte
+<div class="glass-panel p-4">
+  <h3 class="text-foreground mb-4">Layout Options</h3>
+  <button on:click={() => mindMapComponent?.applyLayout('force')} class="btn-secondary w-full mb-2">
+    Apply Force Layout
+  </button>
+  <p class="text-sm text-muted-foreground">
+    Note: This will rearrange nodes but their positions will be saved to the database when you save the mind map.
+  </p>
+</div>
 ```
 
 ## 2. Theme Integration with Three.js

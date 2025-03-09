@@ -930,4 +930,88 @@ Implemented a comprehensive theme system with dynamic switching capabilities and
 - Focus/Feeling values determine theme thresholds
 - Theme features are controlled through data attributes
 
+### 2024-05-17
+
+Successfully implemented force-directed layout for the MindMap3D component:
+
+1. **Force-Directed Layout Implementation**:
+   - Added `applyForceDirectedLayout()` function to MindMap3D component
+   - Implemented physics-based node positioning with three key forces:
+     - **Repulsion Force**: Pushes nodes away from each other (inverse square law)
+     - **Attraction Force**: Pulls connected nodes together (linear with distance)
+     - **Center Attraction**: Gently pulls all nodes toward the center (linear with distance)
+   - Created simulation objects for each node with velocity and force vectors
+   - Implemented iterative simulation with damping to prevent oscillation
+   - Added layout selection function to support multiple layout types
+
+2. **Technical Implementation Details**:
+   - **Node Simulation Objects**:
+     ```typescript
+     const nodeSimulations = threeNodes.map(node => ({
+         node,
+         velocity: new THREE.Vector3(0, 0, 0),
+         force: new THREE.Vector3(0, 0, 0)
+     }));
+     ```
+   - **Force Calculation Parameters**:
+     ```typescript
+     const repulsionStrength = 5;  // Strength of repulsion between nodes
+     const attractionStrength = 0.2;  // Strength of attraction between connected nodes
+     const centerAttractionStrength = 0.05;  // Strength of attraction to center
+     const damping = 0.8;  // Damping factor to prevent oscillation
+     const iterations = 100;  // Number of simulation iterations
+     ```
+   - **Repulsion Force Calculation**:
+     ```typescript
+     const direction = new THREE.Vector3().subVectors(nodeB.node.position, nodeA.node.position);
+     const distance = direction.length();
+     direction.normalize();
+     const repulsionForce = repulsionStrength / (distance * distance);
+     nodeA.force.sub(direction.clone().multiplyScalar(repulsionForce));
+     nodeB.force.add(direction.clone().multiplyScalar(repulsionForce));
+     ```
+   - **Attraction Force Calculation**:
+     ```typescript
+     const direction = new THREE.Vector3().subVectors(endSim.node.position, startSim.node.position);
+     const distance = direction.length();
+     direction.normalize();
+     const attractionForce = attractionStrength * distance;
+     startSim.force.add(direction.clone().multiplyScalar(attractionForce));
+     endSim.force.sub(direction.clone().multiplyScalar(attractionForce));
+     ```
+
+3. **Database Integration**:
+   - Ensured node positions are properly updated in the store after layout application
+   - Positions are saved to the database when the user saves the mind map
+   - Used existing `updateNodePositions()` function to sync ThreeJS positions with store
+   - Maintained proper parent-child relationships during layout application
+
+4. **UI Integration**:
+   - Added a "Layout Options" panel to the maps page
+   - Implemented an "Apply Force Layout" button that calls the layout function
+   - Added user-friendly explanation about position persistence
+   - Used glass-panel styling for consistent UI appearance
+
+5. **Key Learnings**:
+   - Force parameters need careful tuning for natural-looking layouts
+   - Center node should remain fixed at origin for stability
+   - Damping is crucial to prevent oscillation and achieve stable layouts
+   - Iterative simulation approach works well for small to medium-sized mind maps
+   - Existing branch update mechanism handles layout changes seamlessly
+
+6. **Performance Considerations**:
+   - Fixed iteration count (100) provides good balance between quality and performance
+   - Force calculations are O(n²) for repulsion, O(n) for attraction and center forces
+   - Branch updates after layout are potentially expensive for large mind maps
+   - Consider optimizing for larger mind maps in future iterations
+
+7. **Future Improvements**:
+   - Add animation during layout application for better visual feedback
+   - Implement adaptive iteration count based on node count
+   - Consider adding user controls for force parameters
+   - Optimize branch geometry updates for better performance
+   - Add collision detection to prevent node overlap
+
+The force-directed layout implementation provides a natural, balanced arrangement of nodes that respects their connections while maintaining a visually appealing structure. This serves as a solid foundation for implementing other layout algorithms like radial, tree, and spiral layouts.
+
 
