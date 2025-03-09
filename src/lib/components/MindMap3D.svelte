@@ -4,7 +4,12 @@
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
     import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
     import { nodes as nodesStore } from '../stores/mindMapStore';
+    import { mindMapTheme } from '../stores/themeStore';
     import type { MindMapNode } from '$lib/types/mindmap';
+    import type { MindMapTheme } from '../stores/themeStore';
+
+    // Add theme prop with default value
+    export let theme: MindMapTheme = 'default';
 
     let animationFrameId: number;
     let container: HTMLDivElement;
@@ -23,6 +28,15 @@
     }> = [];
     let isDragging = false;
     let isInitialized = false;
+    let currentTheme: MindMapTheme = theme;
+
+    // Subscribe to theme changes
+    $: {
+        if (theme !== currentTheme && isInitialized) {
+            currentTheme = theme;
+            updateNodesAppearance();
+        }
+    }
 
     const dispatch = createEventDispatcher();
 
@@ -145,16 +159,34 @@
         dragControls.addEventListener('hoveron', (event) => {
             orbitControls.enabled = false;
             const mesh = event.object as THREE.Mesh;
-            if (mesh.material instanceof THREE.MeshPhongMaterial) {
-                mesh.material.emissive.setHex(0x666666);
+            
+            // Handle hover effect based on theme
+            if (mesh.userData.theme === 'scifi') {
+                if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                    mesh.material.emissiveIntensity = 1.0;
+                    mesh.material.needsUpdate = true;
+                }
+            } else {
+                if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                    mesh.material.emissive.setHex(0x666666);
+                }
             }
         });
 
         dragControls.addEventListener('hoveroff', (event) => {
             orbitControls.enabled = true;
             const mesh = event.object as THREE.Mesh;
-            if (mesh.material instanceof THREE.MeshPhongMaterial) {
-                mesh.material.emissive.setHex(0x000000);
+            
+            // Handle hover effect based on theme
+            if (mesh.userData.theme === 'scifi') {
+                if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                    mesh.material.emissiveIntensity = 0.5;
+                    mesh.material.needsUpdate = true;
+                }
+            } else {
+                if (mesh.material instanceof THREE.MeshPhongMaterial) {
+                    mesh.material.emissive.setHex(0x000000);
+                }
             }
         });
 
@@ -164,14 +196,14 @@
             orbitControls.enabled = false;
         });
 
-        dragControls.addEventListener('drag', function () {
+        dragControls.addEventListener('drag', function (event: any) {
             if (isDragging) {
                 updateBranches();
                 updateNodePositions();
             }
         });
 
-        dragControls.addEventListener('dragend', function () {
+        dragControls.addEventListener('dragend', function (event: any) {
             if (!orbitControls) return;
             isDragging = false;
             orbitControls.enabled = true;
@@ -217,12 +249,33 @@
     function createNode(position: THREE.Vector3, nodeData: MindMapNode): THREE.Mesh | undefined {
         if (!scene) return undefined;
 
-        const nodeGeometry = new THREE.SphereGeometry(nodeData.isCenter ? 0.75 : 0.5, 32, 32);
-        const nodeMaterial = new THREE.MeshPhongMaterial({ 
-            color: nodeData.isCenter ? 0x4CAF50 : 0x00ff00,
-            emissive: 0x000000,
-            shininess: 100
-        });
+        // Create node geometry based on theme
+        const nodeGeometry = new THREE.SphereGeometry(
+            nodeData.isCenter ? 0.75 : 0.5, 
+            currentTheme === 'scifi' ? 16 : 32, 
+            currentTheme === 'scifi' ? 16 : 32
+        );
+        
+        // Create node material based on theme
+        let nodeMaterial;
+        if (currentTheme === 'scifi') {
+            // Sci-fi wireframe style
+            nodeMaterial = new THREE.MeshPhongMaterial({ 
+                color: nodeData.isCenter ? 0x00ffaa : 0x00aaff,
+                wireframe: true,
+                emissive: nodeData.isCenter ? 0x00aa77 : 0x0077aa,
+                emissiveIntensity: 0.5,
+                shininess: 100
+            });
+        } else {
+            // Default solid style
+            nodeMaterial = new THREE.MeshPhongMaterial({ 
+                color: nodeData.isCenter ? 0x4CAF50 : 0x00ff00,
+                emissive: 0x000000,
+                shininess: 100
+            });
+        }
+        
         const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
         node.position.copy(position);
         node.userData = { 
@@ -231,7 +284,8 @@
             title: nodeData.title,
             description: nodeData.description,
             nodeType: nodeData.nodeType,
-            isCenter: nodeData.isCenter
+            isCenter: nodeData.isCenter,
+            theme: currentTheme
         };
         scene.add(node);
         threeNodes.push(node);
@@ -254,7 +308,7 @@
         const branchGroup = new THREE.Group();
         scene.add(branchGroup);
 
-        // Calculate branch points relative to group
+        // Get the positions directly from the nodes
         const startPoint = startNode.position;
         const endPoint = endNode.position;
         const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
@@ -420,6 +474,7 @@
         if (!camera) return;
 
         branches.forEach(({ branch, startNode, endNode, textMesh, branchGroup }) => {
+            // Get the actual positions, accounting for nodes that might be in groups
             const startPoint = startNode.position;
             const endPoint = endNode.position;
             const midPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5);
@@ -565,8 +620,8 @@
                 storeNode.x = node.position.x;
                 storeNode.y = node.position.y;
                 storeNode.z = node.position.z;
-                }
-            });
+            }
+        });
         nodesStore.set($nodesStore);
     }
 
@@ -578,39 +633,91 @@
         renderer.render(scene, camera);
     }
 
+    // Add function to update nodes appearance when theme changes
+    function updateNodesAppearance() {
+        if (!scene) return;
+        
+        threeNodes.forEach(node => {
+            // Get node data
+            const nodeData = $nodesStore.find(n => n.id === node.userData.id);
+            if (!nodeData) return;
+            
+            // Skip if the node is already using the current theme
+            if (node.userData.theme === currentTheme) return;
+            
+            // Update the node's theme in userData
+            node.userData.theme = currentTheme;
+            
+            // Dispose of old geometry and material
+            node.geometry.dispose();
+            if (Array.isArray(node.material)) {
+                node.material.forEach(m => m.dispose());
+            } else if (node.material) {
+                node.material.dispose();
+            }
+            
+            // Create new geometry based on theme
+            node.geometry = new THREE.SphereGeometry(
+                nodeData.isCenter ? 0.75 : 0.5, 
+                currentTheme === 'scifi' ? 16 : 32, 
+                currentTheme === 'scifi' ? 16 : 32
+            );
+            
+            // Create new material based on theme
+            if (currentTheme === 'scifi') {
+                // Sci-fi wireframe style
+                node.material = new THREE.MeshPhongMaterial({ 
+                    color: nodeData.isCenter ? 0x00ffaa : 0x00aaff,
+                    wireframe: true,
+                    emissive: nodeData.isCenter ? 0x00aa77 : 0x0077aa,
+                    emissiveIntensity: 0.5,
+                    shininess: 100
+                });
+            } else {
+                // Default solid style
+                node.material = new THREE.MeshPhongMaterial({ 
+                    color: nodeData.isCenter ? 0x4CAF50 : 0x00ff00,
+                    emissive: 0x000000,
+                    shininess: 100
+                });
+            }
+        });
+    }
+
+    // Update initializeNodesFromStore to use the current theme
     export function initializeNodesFromStore(nodes: MindMapNode[]) {
         if (!scene) return;
 
         // Clear existing nodes and branches
         threeNodes.forEach(node => {
-                scene.remove(node);
-                if (isMesh(node)) {
+            scene.remove(node);
+            if (isMesh(node)) {
                 node.geometry.dispose();
-                    if (node.material) {
-                        disposeMaterial(node.material);
-                    }
+                if (node.material) {
+                    disposeMaterial(node.material);
                 }
-            });
+            }
+        });
             
         branches.forEach(({ branch, textMesh, branchGroup }) => {
-                scene.remove(branchGroup);
+            scene.remove(branchGroup);
             scene.remove(textMesh);
-                if (isMesh(branch)) {
+            if (isMesh(branch)) {
                 branch.geometry.dispose();
-                    if (branch.material) {
-                        disposeMaterial(branch.material);
-                    }
+                if (branch.material) {
+                    disposeMaterial(branch.material);
                 }
+            }
             if (isMesh(textMesh)) {
                 textMesh.geometry.dispose();
                 if (textMesh.material) {
                     disposeMaterial(textMesh.material);
-                    }
                 }
-            });
+            }
+        });
 
-            threeNodes = [];
-            branches = [];
+        threeNodes = [];
+        branches = [];
 
         // Create new nodes
         nodes.forEach(nodeData => {
@@ -631,6 +738,7 @@
         if (!scene) return;
         const node = threeNodes.find(n => n.userData.id === nodeData.id);
         if (node) {
+            // Update userData for all node types
             node.userData = {
                 ...node.userData,
                 title: nodeData.title,
@@ -806,6 +914,54 @@
             default:
                 console.warn('Unknown layout type:', layoutType);
         }
+    }
+
+    // Add function to switch theme
+    export function switchTheme(newTheme: MindMapTheme) {
+        currentTheme = newTheme;
+        updateNodesAppearance();
+    }
+
+    export function clearScene() {
+        if (!scene) return;
+        
+        // Clear existing nodes and branches
+        threeNodes.forEach(node => {
+            scene.remove(node);
+            
+            // Dispose of geometry and materials
+            if (isMesh(node)) {
+                node.geometry.dispose();
+                if (node.material) {
+                    disposeMaterial(node.material);
+                }
+            }
+        });
+        
+        branches.forEach(({ branch, textMesh, branchGroup }) => {
+            scene.remove(branchGroup);
+            
+            if (isMesh(branch)) {
+                branch.geometry.dispose();
+                if (branch.material) {
+                    disposeMaterial(branch.material);
+                }
+            }
+            
+            if (isMesh(textMesh)) {
+                textMesh.geometry.dispose();
+                if (textMesh.material) {
+                    disposeMaterial(textMesh.material);
+                }
+            }
+        });
+        
+        // Reset arrays
+        threeNodes = [];
+        branches = [];
+        
+        // Update drag controls
+        setupDragControls();
     }
 </script>
 

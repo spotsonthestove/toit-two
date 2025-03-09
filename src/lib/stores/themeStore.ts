@@ -120,4 +120,10 @@ export function getCurrentThemeState() {
     feeling: get(feelingLevel),
     features: get(themeFeatures)
   };
-} 
+}
+
+// Define theme types
+export type MindMapTheme = 'default' | 'scifi';
+
+// Create a writable store with default theme
+export const mindMapTheme = writable<MindMapTheme>('default'); 

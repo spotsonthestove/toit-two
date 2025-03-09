@@ -3,6 +3,7 @@
   import NodeTable from '$lib/components/nodetable.svelte';
   import { onMount, tick } from 'svelte';
   import { nodes } from '$lib/stores/mindMapStore';
+  import { mindMapTheme } from '$lib/stores/themeStore';
   import { enhance } from '$app/forms';
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores/userStore';
@@ -14,6 +15,7 @@
   import NodeDataForm from '$lib/components/NodeDataForm.svelte';
   import * as THREE from 'three';
   import type { MindMapNode, NodeType } from '$lib/types/mindmap';
+  import type { MindMapTheme } from '$lib/stores/themeStore';
 
   // This interface is causing conflicts with DOM Node type
   // Rename to MapNode to avoid conflicts
@@ -72,6 +74,7 @@
   let newMapDescription = '';
   let selectedNodeId: number | null = null;
   let selectedNodePosition: { x: number; y: number; z: number } | null = null;
+  let currentTheme: MindMapTheme = 'default';
 
   $: isAuthenticated = browser && (data.session?.user || $user);
   $: pageError = $page.error;
@@ -410,6 +413,15 @@
         console.error('Error creating new node:', error);
     }
   }
+
+  function toggleTheme() {
+    currentTheme = currentTheme === 'default' ? 'scifi' : 'default';
+    $mindMapTheme = currentTheme;
+    
+    if (mindMapComponent) {
+      mindMapComponent.switchTheme(currentTheme);
+    }
+  }
 </script>
 
 {#if isLoading}
@@ -506,13 +518,30 @@
           <MindMap3D
             bind:this={mindMapComponent}
             on:nodeSelect={handleNodeSelect}
+            theme={currentTheme}
           />
         </div>
 
         <div class="flex flex-col gap-4">
           <button on:click={handleAddNode} class="btn-secondary">Add Node</button>
           
-          <!-- Add layout controls -->
+          <!-- Add theme toggle button -->
+          <div class="glass-panel p-4">
+            <h3 class="text-foreground mb-4">Appearance</h3>
+            <button 
+              on:click={toggleTheme} 
+              class="btn-secondary w-full mb-2"
+            >
+              {currentTheme === 'default' ? 'Switch to Sci-Fi Theme' : 'Switch to Default Theme'}
+            </button>
+            <p class="text-sm text-muted-foreground">
+              {currentTheme === 'default' 
+                ? 'Switch to a futuristic wireframe appearance with glowing centers.' 
+                : 'Return to the standard solid node appearance.'}
+            </p>
+          </div>
+          
+          <!-- Layout controls -->
           <div class="glass-panel p-4">
             <h3 class="text-foreground mb-4">Layout Options</h3>
             <button on:click={() => mindMapComponent?.applyLayout('force')} class="btn-secondary w-full mb-2">
